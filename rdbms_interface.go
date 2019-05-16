@@ -92,7 +92,7 @@ func (r DBSQLiteInfo) TableExists(pDB *sql.DB, pDatabase, pTable string) bool {
 	return (occurences == 1)
 }
 
-func (rDBPostgresInfo DBPostgresInfo) TableExists(pDB *sql.DB, pDatabase, pTable string) bool {
+func (r DBPostgresInfo) TableExists(pDB *sql.DB, pDatabase, pTable string) bool {
 	var occurences bool
 
 	theDML := "SELECT exists (select 1 from information_schema.tables WHERE table_schema='public' AND table_name=" + "'" + pTable + "'" + ")"
@@ -101,7 +101,7 @@ func (rDBPostgresInfo DBPostgresInfo) TableExists(pDB *sql.DB, pDatabase, pTable
 	return occurences
 }
 
-func (rDBMariaInfo DBMariaInfo) TableExists(pDB *sql.DB, pDatabase, pTable string) bool {
+func (r DBMariaInfo) TableExists(pDB *sql.DB, pDatabase, pTable string) bool {
 	var occurences bool
 
 	theDML := "select count(1) from information_schema.tables WHERE table_schema=" + "'" + pDatabase + "'" + " AND table_name=" + "'" + pTable + "'" + " limit 1"
@@ -110,140 +110,129 @@ func (rDBMariaInfo DBMariaInfo) TableExists(pDB *sql.DB, pDatabase, pTable strin
 	return occurences
 }
 
-func (rDBSQLiteInfo DBSQLiteInfo) CreateTable(pDB *sql.DB, pDatabase, pTableName, pDDL string, pColumnPKAutoincrement int) bool {
-
-	var theDDL string
+func (r DBSQLiteInfo) CreateTable(pDB *sql.DB, pDatabase, pTableName, pDDL string, pColumnPKAutoincrement int) (bool, error) {
+	theDDL := pDDL
 
 	if pColumnPKAutoincrement > 0 {
 		theDDL = "\"id\" INTEGER PRIMARY KEY AUTOINCREMENT," + pDDL
-	} else {
-		theDDL = pDDL
 	}
-
 	theDDL = "CREATE TABLE " + pTableName + "(" + theDDL + ")"
-
 	_, err := pDB.Exec(theDDL)
-	checkErr(err, "rDBSQLiteInfo CreateTable")
-
-	return rDBSQLiteInfo.TableExists(pDB, pDatabase, pTableName)
+	if err != nil {
+		return false, err
+	}
+	return r.TableExists(pDB, pDatabase, pTableName), nil
 }
 
-func (rDBPostgresInfo DBPostgresInfo) CreateTable(pDB *sql.DB, pDatabase, pTableName, pDDL string, pColumnPKAutoincrement int) bool {
-
-	var theDDL string
+func (r DBPostgresInfo) CreateTable(pDB *sql.DB, pDatabase, pTableName, pDDL string, pColumnPKAutoincrement int) (bool, error) {
+	theDDL := pDDL
 
 	if pColumnPKAutoincrement > 0 {
 		theDDL = "\"id\" serial," + pDDL
-	} else {
-		theDDL = pDDL
 	}
-
 	theDDL = "CREATE TABLE " + pTableName + "(" + theDDL + ")"
-
 	_, err := pDB.Exec(theDDL)
-	checkErr(err, "rDBPostgresInfo CreateTable "+theDDL)
-
-	return rDBPostgresInfo.TableExists(pDB, pDatabase, pTableName)
+	if err != nil {
+		return false, err
+	}
+	return r.TableExists(pDB, pDatabase, pTableName), nil
 }
 
-func (rDBMariaInfo DBMariaInfo) CreateTable(pDB *sql.DB, pDatabase, pTableName, pDDL string, pColumnPKAutoincrement int) bool {
-
-	var theDDL string
+func (r DBMariaInfo) CreateTable(pDB *sql.DB, pDatabase, pTableName, pDDL string, pColumnPKAutoincrement int) (bool, error) {
+	theDDL := pDDL
 
 	if pColumnPKAutoincrement > 0 {
 		theDDL = "\"id\" serial," + pDDL
-	} else {
-		theDDL = pDDL
 	}
-
 	theDDL = "CREATE TABLE " + pTableName + " (" + strings.Replace(theDDL, "\"", "", -1) + ")"
-
-	fmt.Println(theDDL, pColumnPKAutoincrement)
-
 	_, err := pDB.Exec(theDDL)
-	checkErr(err, "rDBMariaInfo CreateTable: "+theDDL)
-
-	return rDBMariaInfo.TableExists(pDB, pDatabase, pTableName)
+	if err != nil {
+		return false, err
+	}
+	return r.TableExists(pDB, pDatabase, pTableName), nil
 }
 
-func (rDBSQLiteInfo DBSQLiteInfo) SingleInsert(pDB *sql.DB, pTableName string, pValues []string) error {
-
+func (r DBSQLiteInfo) SingleInsert(pDB *sql.DB, pTableName string, pValues []string) error {
 	theDDL := "insert into " + pTableName + " values(" + "\"" + strings.Join(pValues, "\""+","+"\"") + "\"" + ")"
 	_, err := pDB.Exec(theDDL)
 
 	return err
 }
 
-func (rDBPostgresInfo DBPostgresInfo) SingleInsert(pDB *sql.DB, pTableName string, pValues []string) error {
-
+func (r DBPostgresInfo) SingleInsert(pDB *sql.DB, pTableName string, pValues []string) error {
 	theDDL := "insert into " + pTableName + " values(" + "\"" + strings.Join(pValues, "\""+","+"\"") + "\"" + ")"
 	_, err := pDB.Exec(theDDL)
 
 	return err
 }
 
-func (rDBMariaInfo DBMariaInfo) SingleInsert(pDB *sql.DB, pTableName string, pValues []string) error {
-
+func (r DBMariaInfo) SingleInsert(pDB *sql.DB, pTableName string, pValues []string) error {
 	theDDL := "insert into " + pTableName + " values(" + "\"" + strings.Join(pValues, "\""+","+"\"") + "\"" + ")"
 	_, err := pDB.Exec(theDDL)
 
 	return err
 }
 
-func (rDBSQLiteInfo DBSQLiteInfo) BulkInsert(pDB *sql.DB, pTableName string, pColumnNames []string, pValues [][]string) error {
+func (r DBSQLiteInfo) BulkInsert(pDB *sql.DB, pTableName string, pColumnNames []string, pValues [][]string) error {
 
 	theQuestionMarks := returnNoValues(pValues[0], "?")
 
-	// -------- DB Transaction Start -----------
-	dbTransaction, err := pDB.Begin()
-	checkErr(err, "pDB.Begin")
+	dbTransaction, err := pDB.Begin() // DB Transaction Start
+	if err != nil {
+		dbTransaction.Rollback()
+		return err
+	}
 
 	statement := "insert into " + pTableName + "(" + strings.Join(pColumnNames, ",") + ")" + " values " + theQuestionMarks
-
 	dml, err := dbTransaction.Prepare(statement)
-	checkErr(err, "dbTransaction.Prepare")
 	defer dml.Close()
+
+	if err != nil {
+		dbTransaction.Rollback()
+		return err
+	}
 
 	for _, columnValues := range pValues {
 		_, err := dml.Exec(SliceToInterface(columnValues)...)
 
 		if err != nil {
-			fmt.Println("dml.Exec: ", err)
-			panic(err)
+			dbTransaction.Rollback()
+			return err
 		}
 	}
-	dbTransaction.Commit()
-	// -------- DB Transaction End -----------
-
-	return err
+	dbTransaction.Commit() // DB Transaction End
+	return nil
 }
 
-func (rDBMariaInfo DBMariaInfo) BulkInsert(pDB *sql.DB, pTableName string, pColumnNames []string, pValues [][]string) error {
+func (r DBMariaInfo) BulkInsert(pDB *sql.DB, pTableName string, pColumnNames []string, pValues [][]string) error {
 
 	theQuestionMarks := returnNoValues(pValues[0], "?")
 
-	// -------- DB Transaction Start -----------
-	dbTransaction, err := pDB.Begin()
-	checkErr(err, "pDB.Begin")
+	dbTransaction, err := pDB.Begin() // DB Transaction Start
+	if err != nil {
+		dbTransaction.Rollback()
+		return err
+	}
 
 	statement := "insert into " + pTableName + "(" + strings.Join(pColumnNames, ",") + ")" + " values " + theQuestionMarks
-
 	dml, err := dbTransaction.Prepare(statement)
-	checkErr(err, "dbTransaction.Prepare")
 	defer dml.Close()
+
+	if err != nil {
+		dbTransaction.Rollback()
+		return err
+	}
 
 	for _, columnValues := range pValues {
 		_, err := dml.Exec(SliceToInterface(columnValues)...)
 
 		if err != nil {
-			fmt.Println("dml.Exec: ", err)
-			panic(err)
+			dbTransaction.Rollback()
+			return err
 		}
 	}
-	dbTransaction.Commit()
-	// -------- DB Transaction End -----------
-
-	return err
+	dbTransaction.Commit() // DB Transaction End
+	return nil
 }
 
 func prepareDBFields(pFields string) string {
