@@ -1,5 +1,8 @@
 # HERA - Layer for RDBMS
-(SQLite) Schema
+(SQLite) Schema - needs SQLite support:
+```bash
+sudo apt-get install sqlite3 libsqlite3-dev
+```
 
 ```sql
 drop table users
