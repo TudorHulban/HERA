@@ -9,9 +9,11 @@ drop table users
 
 create table users (
 id integer primary key,
-first_name text NOT NULL,
-last_name text NOT NULL,
-role integer NOT NULL)
+first_name text not null,
+last_name text not null,
+password text not null,
+role integer not null,
+enabled text not null)
 ```
 
 ```sql
