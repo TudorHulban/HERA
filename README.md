@@ -1,5 +1,5 @@
-# HERA
-Layer for RDBMS
+# HERA - Layer for RDBMS
+(SQLite) Schema
 
 ```sql
 drop table users
