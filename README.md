@@ -14,3 +14,20 @@ role integer NOT NULL)
 ```sql
 insert into users(first_name, last_name, role) values("john", "doe",1)
 ```
+
+```sql
+drop table roles
+
+create table roles (
+id integer primary key,
+code text not null,
+description text not null,
+enabled text not null)
+```
+
+```sql
+insert into roles(code, description, enabled) values("ADMIN", "Full rights", "Y");
+insert into roles(code, description, enabled) values("USER", "Some rights", "Y");
+insert into roles(code, description, enabled) values("GUEST", "Few rights", "Y");
+```
+
