@@ -1,5 +1,5 @@
 # HERA - Layer for RDBMS
-(SQLite) Schema - needs SQLite support:
+(SQLite) Schema - needs SQLite support (database file created at first execution, ex. db.Exec(DDL)):
 ```bash
 sudo apt-get install sqlite3 libsqlite3-dev
 ```
