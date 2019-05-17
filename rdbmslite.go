@@ -12,7 +12,7 @@ type DBSQLiteInfo struct {
 	DBFile string //holds SQLIte DB File
 }
 
-func (r DBSQLiteInfo) NewConnection(pDBName string) (*sql.DB, error) {
+func (r DBSQLiteInfo) NewConnection() (*sql.DB, error) {
 
 	log.Println("2")
 
@@ -25,7 +25,7 @@ func (r DBSQLiteInfo) NewConnection(pDBName string) (*sql.DB, error) {
 	return instance, err
 }
 
-func (r DBSQLiteInfo) TableExists(pDB *sql.DB, pDatabase, pTable string) bool {
+func (r DBSQLiteInfo) TableExists(pDB *sql.DB, pTable string) bool {
 	var occurences int
 
 	_ = pDB.QueryRow("SELECT count(*) FROM sqlite_master WHERE type='table' AND name=?", pTable).Scan(&occurences)
@@ -33,7 +33,7 @@ func (r DBSQLiteInfo) TableExists(pDB *sql.DB, pDatabase, pTable string) bool {
 	return (occurences == 1)
 }
 
-func (r DBSQLiteInfo) CreateTable(pDB *sql.DB, pDatabase, pTableName, pDDL string, pColumnPKAutoincrement int) (bool, error) {
+func (r DBSQLiteInfo) CreateTable(pDB *sql.DB, pTableName, pDDL string, pColumnPKAutoincrement int) (bool, error) {
 	theDDL := pDDL
 
 	if pColumnPKAutoincrement > 0 {
@@ -44,7 +44,7 @@ func (r DBSQLiteInfo) CreateTable(pDB *sql.DB, pDatabase, pTableName, pDDL strin
 	if err != nil {
 		return false, err
 	}
-	return r.TableExists(pDB, pDatabase, pTableName), nil
+	return r.TableExists(pDB, pTableName), nil
 }
 
 func (r DBSQLiteInfo) SingleInsert(pDB *sql.DB, pTableName string, pValues []string) error {

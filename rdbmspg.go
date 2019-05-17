@@ -15,14 +15,15 @@ type DBPostgresInfo struct {
 	port     uint
 	user     string
 	password string
+	dbName   string
 }
 
-func (r DBPostgresInfo) NewConnection(pDBName string) (*sql.DB, error) {
+func (r DBPostgresInfo) NewConnection() (*sql.DB, error) {
 
 	instance := new(sql.DB)
 	var err error
 
-	dbinfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", r.ip, r.port, r.user, r.password, pDBName)
+	dbinfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", r.ip, r.port, r.user, r.password, r.dbName)
 	onceDB.Do(func() {
 		instance, err = sql.Open("postgres", dbinfo)
 	})

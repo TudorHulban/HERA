@@ -6,39 +6,66 @@ import (
 )
 
 func main() {
-	i := DBSQLiteInfo{"x1.sdb"}
-
-	log.Println("1")
-	v, err := i.NewConnection(i.DBFile)
+	v, err := DBSQLiteInfo{"x3.db"}.NewConnection()
 	log.Println(v, err)
 
 	NewTbUsers(v)
+	NewTbRoles(v)
 }
 
 func NewTbUsers(pDB *sql.DB) error {
 
-	f1 := ColumnDef{Name: "id", Type: "integer", PrimaryKey: true}
-	f2 := ColumnDef{Name: "first_name", Type: "text", PrimaryKey: false, NotNull: true}
-	f3 := ColumnDef{Name: "last_name", Type: "text", PrimaryKey: false, NotNull: true}
-	f4 := ColumnDef{Name: "password", Type: "text", PrimaryKey: false, NotNull: true}
-	f5 := ColumnDef{Name: "role", Type: "integer", PrimaryKey: false, NotNull: true}
-	f6 := ColumnDef{Name: "enabled", Type: "text", PrimaryKey: false, NotNull: true}
+	t := TableDDL{Name: "users"}
+	t.TableFields = append(t.TableFields, ColumnDef{Name: "id", Type: "integer", PrimaryKey: true})
+	t.TableFields = append(t.TableFields, ColumnDef{Name: "first_name", Type: "text", PrimaryKey: false, NotNull: true})
+	t.TableFields = append(t.TableFields, ColumnDef{Name: "last_name", Type: "text", PrimaryKey: false, NotNull: true})
+	t.TableFields = append(t.TableFields, ColumnDef{Name: "password", Type: "text", PrimaryKey: false, NotNull: true})
+	t.TableFields = append(t.TableFields, ColumnDef{Name: "role", Type: "integer", PrimaryKey: false, NotNull: true})
+	t.TableFields = append(t.TableFields, ColumnDef{Name: "enabled", Type: "text", PrimaryKey: false, NotNull: true})
 
-	table := TableDDL{Name: "users", TableFields: []ColumnDef{f1, f2, f3, f4, f5, f6}}
-	return NewTable(pDB, table)
+	return NewTable(pDB, t)
+}
+
+func NewTbRoles(pDB *sql.DB) error {
+
+	t := TableDDL{Name: "roles"}
+	t.TableFields = append(t.TableFields, ColumnDef{Name: "id", Type: "integer", PrimaryKey: true})
+	t.TableFields = append(t.TableFields, ColumnDef{Name: "code", Type: "text", PrimaryKey: false, NotNull: true})
+	t.TableFields = append(t.TableFields, ColumnDef{Name: "description", Type: "text", PrimaryKey: false, NotNull: true})
+	t.TableFields = append(t.TableFields, ColumnDef{Name: "enabled", Type: "text", PrimaryKey: false, NotNull: true})
+
+	return NewTable(pDB, t)
 }
 
 func NewTable(pDB *sql.DB, pDDL TableDDL) error {
+	var fieldDDL string
 
-	return nil
-}
+	var columnDDL = func(pDDL ColumnDef) string {
+		var notnull, pk string
 
-func columnDDL(pDDL ColumnDef) string {
-	var notnull string
-	if pDDL.NotNull {
-		notnull = "not null"
+		if pDDL.NotNull {
+			notnull = " " + "not null"
+		}
+
+		if pDDL.PrimaryKey {
+			pk = " " + "PRIMARY KEY"
+		}
+
+		ddl := pDDL.Name + " " + pDDL.Type + pk + notnull
+		return ddl
 	}
 
-	ddl := pDDL.Name + " " + pDDL.Type + " " + notnull + " ,"
-	return ddl
+	for k, v := range pDDL.TableFields {
+		if k == 0 {
+			fieldDDL = columnDDL(v)
+		} else {
+			fieldDDL = fieldDDL + "," + columnDDL(v)
+		}
+	}
+
+	ddl := "create table " + pDDL.Name + "(" + fieldDDL + ")"
+	log.Println("DDL: ", ddl)
+
+	_, err := pDB.Exec(ddl)
+	return err
 }
