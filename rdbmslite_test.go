@@ -2,11 +2,13 @@ package main
 
 import (
 	"database/sql"
+	"os"
 	"testing"
 )
 
-func TestNewTable(t *testing.T) {
-	db := DBSQLiteInfo{"lite.db"}
+func TestSQLite(t *testing.T) {
+	dbPath := "lite.db"
+	db := DBSQLiteInfo{dbPath}
 	dbHandler, err := db.NewConnection()
 	if err != nil {
 		t.Error("dbHandler: ", err)
@@ -43,6 +45,11 @@ func TestNewTable(t *testing.T) {
 	ex = db.TableExists(dbHandler, "roles")
 	if ex {
 		t.Error("Table still exists", ex)
+	}
+
+	err = os.Remove(dbPath)
+	if err != nil {
+		t.Error("Database file not removed")
 	}
 }
 

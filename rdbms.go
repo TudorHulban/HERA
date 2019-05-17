@@ -21,9 +21,11 @@ type TableDDL struct {
 	TableFields []ColumnDef
 }
 
+// TableValues - to be used for insert, select
 type TableValues struct {
-	Columns []ColumnDef
-	Values  map[string]string // has column name as key map
+	TableName   string
+	ColumnNames string
+	Values      []string
 }
 
 type SchemaDDL struct {

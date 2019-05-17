@@ -59,10 +59,10 @@ func NewTable(pDB *sql.DB, pDDL TableDDL) error {
 	return err
 }
 
-func (r DBSQLiteInfo) SingleInsert(pDB *sql.DB, pTableName string, pValues []string) error {
-	theDDL := "insert into " + pTableName + " values(" + "\"" + strings.Join(pValues, "\""+","+"\"") + "\"" + ")"
-	_, err := pDB.Exec(theDDL)
+func Insert(pDB *sql.DB, pValues *TableValues) error {
 
+	theDDL := "insert into " + pValues.TableName + "(" + pValues.ColumnNames + ")" + " values(" + "\"" + strings.Join(pValues.Values, "\""+","+"\"") + "\"" + ")"
+	_, err := pDB.Exec(theDDL)
 	return err
 }
 
