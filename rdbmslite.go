@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"log"
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -12,6 +13,8 @@ type DBSQLiteInfo struct {
 }
 
 func (r DBSQLiteInfo) NewConnection(pDBName string) (*sql.DB, error) {
+
+	log.Println("2")
 
 	instance := new(sql.DB)
 	var err error

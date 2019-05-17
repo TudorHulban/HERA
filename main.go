@@ -2,41 +2,43 @@ package main
 
 import (
 	"database/sql"
-	"errors"
 	"log"
-	"os"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
-	v, err := NewSQLiteDB("x1.sdb")
+	i := DBSQLiteInfo{"x1.sdb"}
+
+	log.Println("1")
+	v, err := i.NewConnection(i.DBFile)
 	log.Println(v, err)
+
+	NewTbUsers(v)
 }
 
-func NewSQLiteDB(pDBFile string) (string, error) {
+func NewTbUsers(pDB *sql.DB) error {
 
-	_, err := os.Stat(pDBFile)
+	f1 := ColumnDef{Name: "id", Type: "integer", PrimaryKey: true}
+	f2 := ColumnDef{Name: "first_name", Type: "text", PrimaryKey: false, NotNull: true}
+	f3 := ColumnDef{Name: "last_name", Type: "text", PrimaryKey: false, NotNull: true}
+	f4 := ColumnDef{Name: "password", Type: "text", PrimaryKey: false, NotNull: true}
+	f5 := ColumnDef{Name: "role", Type: "integer", PrimaryKey: false, NotNull: true}
+	f6 := ColumnDef{Name: "enabled", Type: "text", PrimaryKey: false, NotNull: true}
 
-	if err == nil {
-		return "", errors.New("File already exists!")
-	}
-
-	v, err := GetSQLiteVersion(pDBFile)
-	return v, err
+	table := TableDDL{Name: "users", TableFields: []ColumnDef{f1, f2, f3, f4, f5, f6}}
+	return NewTable(pDB, table)
 }
 
-func GetSQLiteVersion(pDBFile string) (string, error) {
-	db, err := sql.Open("sqlite3", pDBFile)
-	defer db.Close()
+func NewTable(pDB *sql.DB, pDDL TableDDL) error {
 
-	if err != nil {
-		log.Println("sqlite version: ", err)
-		return "", err
+	return nil
+}
+
+func columnDDL(pDDL ColumnDef) string {
+	var notnull string
+	if pDDL.NotNull {
+		notnull = "not null"
 	}
 
-	var version string
-
-	err = db.QueryRow("select sqlite_version()").Scan(&version)
-	return version, err
+	ddl := pDDL.Name + " " + pDDL.Type + " " + notnull + " ,"
+	return ddl
 }

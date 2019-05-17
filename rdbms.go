@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"reflect"
 
 	"strings"
@@ -10,12 +9,25 @@ import (
 
 var onceDB sync.Once
 
-type RDBMS interface {
-	NewConnection(pDBName string) (*sql.DB, error)
-	TableExists(pDB *sql.DB, pDatabase, pTable string) bool
-	CreateTable(pDB *sql.DB, pDatabase, pTableName, pDDL string, pColumnPKAutoincrement int) bool
-	SingleInsert(pDB *sql.DB, pTableName string, pValues []string) error
-	BulkInsert(pDB *sql.DB, pTableName string, pColumnNames []string, pValues [][]string) error
+type ColumnDef struct {
+	Name       string
+	Type       string
+	PrimaryKey bool
+	NotNull    bool
+}
+
+type TableDDL struct {
+	Name        string
+	TableFields []ColumnDef
+}
+
+type TableValues struct {
+	Columns []ColumnDef
+	Values  map[string]string // has column name as key map
+}
+
+type SchemaDDL struct {
+	Tables []TableDDL
 }
 
 func prepareDBFields(pFields string) string {
