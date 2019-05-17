@@ -13,9 +13,6 @@ type DBSQLiteInfo struct {
 }
 
 func (r DBSQLiteInfo) NewConnection() (*sql.DB, error) {
-
-	log.Println("2")
-
 	instance := new(sql.DB)
 	var err error
 	onceDB.Do(func() {
@@ -27,24 +24,39 @@ func (r DBSQLiteInfo) NewConnection() (*sql.DB, error) {
 
 func (r DBSQLiteInfo) TableExists(pDB *sql.DB, pTable string) bool {
 	var occurences int
-
 	_ = pDB.QueryRow("SELECT count(*) FROM sqlite_master WHERE type='table' AND name=?", pTable).Scan(&occurences)
-
+	//log.Println(pTable, occurences)
 	return (occurences == 1)
 }
 
-func (r DBSQLiteInfo) CreateTable(pDB *sql.DB, pTableName, pDDL string, pColumnPKAutoincrement int) (bool, error) {
-	theDDL := pDDL
+func NewTable(pDB *sql.DB, pDDL TableDDL) error {
+	var fieldDDL string
+	var columnDDL = func(pDDL ColumnDef) string {
+		var notnull, pk string
 
-	if pColumnPKAutoincrement > 0 {
-		theDDL = "\"id\" INTEGER PRIMARY KEY AUTOINCREMENT," + pDDL
+		if pDDL.NotNull {
+			notnull = " " + "not null"
+		}
+		if pDDL.PrimaryKey {
+			pk = " " + "PRIMARY KEY"
+		}
+		ddl := pDDL.Name + " " + pDDL.Type + pk + notnull
+		return ddl
 	}
-	theDDL = "CREATE TABLE " + pTableName + "(" + theDDL + ")"
-	_, err := pDB.Exec(theDDL)
-	if err != nil {
-		return false, err
+
+	for k, v := range pDDL.TableFields {
+		if k == 0 {
+			fieldDDL = columnDDL(v)
+		} else {
+			fieldDDL = fieldDDL + "," + columnDDL(v)
+		}
 	}
-	return r.TableExists(pDB, pTableName), nil
+
+	ddl := "create table " + pDDL.Name + "(" + fieldDDL + ")"
+	log.Println("DDL: ", ddl)
+
+	_, err := pDB.Exec(ddl)
+	return err
 }
 
 func (r DBSQLiteInfo) SingleInsert(pDB *sql.DB, pTableName string, pValues []string) error {
