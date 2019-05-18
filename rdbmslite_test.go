@@ -35,9 +35,33 @@ func TestSQLite(t *testing.T) {
 
 	db.Insert(dbHandler, &i1)
 
-	// Testing Query
-	rows := db.QueryRow(dbHandler, "select * from users where id=1")
-	log.Println("Rows: ", *rows)
+	// Testing Query - https://kylewbanks.com/blog/query-result-to-map-in-golang
+	rows, _ := db.Query(dbHandler, "select * from users where id=1")
+	columns, _ := rows.Columns()
+
+	for rows.Next() {
+		cols := make([]interface{}, len(columns))
+		colsPointers := make([]interface{}, len(columns))
+		for i, _ := range cols {
+			colsPointers[i] = &cols[i]
+		}
+
+		err := rows.Scan(colsPointers...)
+		if err != nil {
+			log.Println("scan: ", err)
+		}
+
+		type cellValue struct {
+			columnName string
+			cellData   interface{}
+		}
+		m := []cellValue{}
+
+		for k, colName := range columns {
+			m = append(m, cellValue{columnName: colName, cellData: *colsPointers[k].(*interface{})})
+		}
+		log.Print("m:", m)
+	}
 
 	_, err = dbHandler.Exec("drop table users")
 	if err != nil {
