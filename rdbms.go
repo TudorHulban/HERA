@@ -21,11 +21,17 @@ type TableDDL struct {
 	TableFields []ColumnDef
 }
 
-// TableValues - to be used for insert, select
-type TableValues struct {
+// RowValues - to be used for insert, select for single row
+type RowValues struct {
 	TableName   string
 	ColumnNames string
 	Values      []string
+}
+
+type BulkValues struct {
+	TableName   string
+	ColumnNames string
+	Values      [][]string
 }
 
 type SchemaDDL struct {

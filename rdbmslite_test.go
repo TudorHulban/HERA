@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"os"
 	"testing"
 )
@@ -14,8 +13,8 @@ func TestSQLite(t *testing.T) {
 		t.Error("dbHandler: ", err)
 	}
 
-	NewTbUsers(dbHandler)
-	NewTbRoles(dbHandler)
+	db.NewTable(dbHandler, *ddlUsers())
+	db.NewTable(dbHandler, *ddlRoles())
 
 	ex := db.TableExists(dbHandler, "users")
 	if !ex {
@@ -26,6 +25,16 @@ func TestSQLite(t *testing.T) {
 	if !ex {
 		t.Error("Table not created")
 	}
+
+	// Testing Insert
+	var i1 RowValues
+	i1.TableName = "users"
+	i1.ColumnNames = "first_name, last_name, password, role, enabled"
+	i1.Values = []string{"john", "smith", "123", "1", "Y"}
+
+	db.Insert(dbHandler, &i1)
+
+	// Testing Query
 
 	_, err = dbHandler.Exec("drop table users")
 	if err != nil {
@@ -53,7 +62,7 @@ func TestSQLite(t *testing.T) {
 	}
 }
 
-func NewTbUsers(pDB *sql.DB) error {
+func ddlUsers() *TableDDL {
 	t := TableDDL{Name: "users"}
 	t.TableFields = append(t.TableFields, ColumnDef{Name: "id", Type: "integer", PrimaryKey: true})
 	t.TableFields = append(t.TableFields, ColumnDef{Name: "first_name", Type: "text", PrimaryKey: false, NotNull: true})
@@ -62,15 +71,15 @@ func NewTbUsers(pDB *sql.DB) error {
 	t.TableFields = append(t.TableFields, ColumnDef{Name: "role", Type: "integer", PrimaryKey: false, NotNull: true})
 	t.TableFields = append(t.TableFields, ColumnDef{Name: "enabled", Type: "text", PrimaryKey: false, NotNull: true})
 
-	return NewTable(pDB, t)
+	return &t
 }
 
-func NewTbRoles(pDB *sql.DB) error {
+func ddlRoles() *TableDDL {
 	t := TableDDL{Name: "roles"}
 	t.TableFields = append(t.TableFields, ColumnDef{Name: "id", Type: "integer", PrimaryKey: true})
 	t.TableFields = append(t.TableFields, ColumnDef{Name: "code", Type: "text", PrimaryKey: false, NotNull: true})
 	t.TableFields = append(t.TableFields, ColumnDef{Name: "description", Type: "text", PrimaryKey: false, NotNull: true})
 	t.TableFields = append(t.TableFields, ColumnDef{Name: "enabled", Type: "text", PrimaryKey: false, NotNull: true})
 
-	return NewTable(pDB, t)
+	return &t
 }

@@ -29,7 +29,7 @@ func (r DBSQLiteInfo) TableExists(pDB *sql.DB, pTable string) bool {
 	return (occurences == 1)
 }
 
-func NewTable(pDB *sql.DB, pDDL TableDDL) error {
+func (r DBSQLiteInfo) NewTable(pDB *sql.DB, pDDL TableDDL) error {
 	var fieldDDL string
 	var columnDDL = func(pDDL ColumnDef) string {
 		var notnull, pk string
@@ -59,16 +59,16 @@ func NewTable(pDB *sql.DB, pDDL TableDDL) error {
 	return err
 }
 
-func Insert(pDB *sql.DB, pValues *TableValues) error {
+func (r DBSQLiteInfo) Insert(pDB *sql.DB, pValues *RowValues) error {
 
 	theDDL := "insert into " + pValues.TableName + "(" + pValues.ColumnNames + ")" + " values(" + "\"" + strings.Join(pValues.Values, "\""+","+"\"") + "\"" + ")"
 	_, err := pDB.Exec(theDDL)
 	return err
 }
 
-func (r DBSQLiteInfo) BulkInsert(pDB *sql.DB, pTableName string, pColumnNames []string, pValues [][]string) error {
+func (r DBSQLiteInfo) BulkInsert(pDB *sql.DB, pBulk *BulkValues) error {
 
-	theQuestionMarks := returnNoValues(pValues[0], "?")
+	theQuestionMarks := returnNoValues(pBulk.Values[0], "?")
 
 	dbTransaction, err := pDB.Begin() // DB Transaction Start
 	if err != nil {
@@ -76,7 +76,7 @@ func (r DBSQLiteInfo) BulkInsert(pDB *sql.DB, pTableName string, pColumnNames []
 		return err
 	}
 
-	statement := "insert into " + pTableName + "(" + strings.Join(pColumnNames, ",") + ")" + " values " + theQuestionMarks
+	statement := "insert into " + pBulk.TableName + "(" + pBulk.ColumnNames + ")" + " values " + theQuestionMarks
 	dml, err := dbTransaction.Prepare(statement)
 	defer dml.Close()
 
@@ -85,7 +85,7 @@ func (r DBSQLiteInfo) BulkInsert(pDB *sql.DB, pTableName string, pColumnNames []
 		return err
 	}
 
-	for _, columnValues := range pValues {
+	for _, columnValues := range pBulk.Values {
 		_, err := dml.Exec(SliceToInterface(columnValues)...)
 
 		if err != nil {
@@ -95,4 +95,8 @@ func (r DBSQLiteInfo) BulkInsert(pDB *sql.DB, pTableName string, pColumnNames []
 	}
 	dbTransaction.Commit() // DB Transaction End
 	return nil
+}
+
+func (r DBSQLiteInfo) QueryRow(pDB *sql.DB, pSQL string) *sql.Row {
+
 }
