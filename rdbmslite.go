@@ -98,5 +98,5 @@ func (r DBSQLiteInfo) BulkInsert(pDB *sql.DB, pBulk *BulkValues) error {
 }
 
 func (r DBSQLiteInfo) QueryRow(pDB *sql.DB, pSQL string) *sql.Row {
-
+	return pDB.QueryRow(pSQL)
 }

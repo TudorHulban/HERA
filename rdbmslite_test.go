@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"testing"
 )
@@ -35,6 +36,8 @@ func TestSQLite(t *testing.T) {
 	db.Insert(dbHandler, &i1)
 
 	// Testing Query
+	rows := db.QueryRow(dbHandler, "select * from users where id=1")
+	log.Println("Rows: ", *rows)
 
 	_, err = dbHandler.Exec("drop table users")
 	if err != nil {
