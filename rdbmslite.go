@@ -59,9 +59,9 @@ func (r DBSQLiteInfo) NewTable(pDB *sql.DB, pDDL TableDDL) error {
 	return err
 }
 
-func (r DBSQLiteInfo) Insert(pDB *sql.DB, pValues *RowValues) error {
+func (r DBSQLiteInfo) Insert(pDB *sql.DB, pTable string, pValues *RowData) error {
 
-	theDDL := "insert into " + pValues.TableName + "(" + pValues.ColumnNames + ")" + " values(" + "\"" + strings.Join(pValues.Values, "\""+","+"\"") + "\"" + ")"
+	theDDL := "insert into " + pTable + "(" + pValues.ColumnNames + ")" + " values(" + "\"" + strings.Join(pValues.Values, "\""+","+"\"") + "\"" + ")"
 	_, err := pDB.Exec(theDDL)
 	return err
 }

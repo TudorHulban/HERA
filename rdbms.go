@@ -1,6 +1,8 @@
 package main
 
 import (
+	"database/sql"
+	"log"
 	"reflect"
 
 	"strings"
@@ -8,6 +10,8 @@ import (
 )
 
 var onceDB sync.Once
+
+// --------- DDL
 
 type ColumnDef struct {
 	Name       string
@@ -21,9 +25,14 @@ type TableDDL struct {
 	TableFields []ColumnDef
 }
 
-// RowValues - to be used for insert, select for single row
-type RowValues struct {
-	TableName   string
+type SchemaDDL struct {
+	Tables []TableDDL
+}
+
+// ----------- INSERT
+
+// RowValues - to be used for insert single row
+type RowData struct {
 	ColumnNames string
 	Values      []string
 }
@@ -34,8 +43,20 @@ type BulkValues struct {
 	Values      [][]string
 }
 
-type SchemaDDL struct {
-	Tables []TableDDL
+// CellValue - for select
+type CellValue struct {
+	ColumnName string
+	CellData   interface{}
+}
+
+type RowValue struct {
+	ColumnNames []string
+	Values      []interface{}
+}
+
+type TableData struct {
+	ColumnNames []string
+	Data        [][]interface{}
 }
 
 func prepareDBFields(pFields string) string {
@@ -69,4 +90,35 @@ func SliceToInterface(slice interface{}) []interface{} {
 	}
 
 	return result
+}
+
+func RowsToSlice(pRows *sql.Rows) (*TableData, error) {
+	columns, _ := pRows.Columns()
+	cols := make([]interface{}, len(columns))
+
+	d := new(TableData)
+
+	for pRows.Next() {
+		colsPointers := make([]interface{}, len(columns))
+
+		for i, _ := range cols {
+			colsPointers[i] = &cols[i]
+		}
+
+		err := pRows.Scan(colsPointers...)
+		if err != nil {
+			log.Println("scan: ", err)
+			return nil, err
+		}
+
+		m := []CellValue{}
+
+		for k, colName := range columns {
+			m = append(m, CellValue{ColumnName: colName, CellData: *colsPointers[k].(*interface{})})
+		}
+
+		d.Data = append(d.Data, m)
+		log.Print("m:", m)
+	}
+	return d, nil
 }
