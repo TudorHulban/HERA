@@ -49,7 +49,7 @@ type CellValue struct {
 	CellData   interface{}
 }
 
-type RowValue struct {
+type RowValues struct {
 	ColumnNames []string
 	Values      []interface{}
 }
@@ -93,13 +93,17 @@ func SliceToInterface(slice interface{}) []interface{} {
 }
 
 func RowsToSlice(pRows *sql.Rows) (*TableData, error) {
+	d := new(TableData)
+
 	columns, _ := pRows.Columns()
 	cols := make([]interface{}, len(columns))
 
-	d := new(TableData)
+	for _, v := range columns {
+		d.ColumnNames = append(d.ColumnNames, v)
+	}
 
 	for pRows.Next() {
-		colsPointers := make([]interface{}, len(columns))
+		colsPointers := make([]interface{}, len(columns)) // initialize pointers for each row
 
 		for i, _ := range cols {
 			colsPointers[i] = &cols[i]
@@ -111,14 +115,7 @@ func RowsToSlice(pRows *sql.Rows) (*TableData, error) {
 			return nil, err
 		}
 
-		m := []CellValue{}
-
-		for k, colName := range columns {
-			m = append(m, CellValue{ColumnName: colName, CellData: *colsPointers[k].(*interface{})})
-		}
-
-		d.Data = append(d.Data, m)
-		log.Print("m:", m)
+		d.Data = append(d.Data, colsPointers)
 	}
 	return d, nil
 }
