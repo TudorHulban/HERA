@@ -8,6 +8,7 @@ func main() {
 	dbPath := "lite.db"
 	db := DBSQLiteInfo{dbPath}
 	dbHandler, err := db.NewConnection()
+	defer dbHandler.Close()
 	if err != nil {
 		log.Println("dbHandler: ", err)
 	}
