@@ -59,14 +59,14 @@ func (r DBSQLiteInfo) NewTable(pDB *sql.DB, pDDL TableDDL) error {
 	return err
 }
 
-func (r DBSQLiteInfo) Insert(pDB *sql.DB, pTable string, pValues *RowData) error {
+func (r DBSQLiteInfo) InsertRow(pDB *sql.DB, pValues *RowData) error {
 
-	theDDL := "insert into " + pTable + "(" + pValues.ColumnNames + ")" + " values(" + "\"" + strings.Join(pValues.Values, "\""+","+"\"") + "\"" + ")"
+	theDDL := "insert into " + pValues.TableName + "(" + pValues.ColumnNames + ")" + " values(" + "\"" + strings.Join(pValues.Values, "\""+","+"\"") + "\"" + ")"
 	_, err := pDB.Exec(theDDL)
 	return err
 }
 
-func (r DBSQLiteInfo) BulkInsert(pDB *sql.DB, pBulk *BulkValues) error {
+func (r DBSQLiteInfo) InsertBulk(pDB *sql.DB, pBulk *BulkValues) error {
 
 	theQuestionMarks := returnNoValues(pBulk.Values[0], "?")
 

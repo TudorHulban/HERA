@@ -13,6 +13,7 @@ func TestSQLite(t *testing.T) {
 	if err != nil {
 		t.Error("dbHandler: ", err)
 	}
+	defer dbHandler.Close()
 
 	db.NewTable(dbHandler, *ddlUsers())
 	db.NewTable(dbHandler, *ddlRoles())
@@ -27,13 +28,23 @@ func TestSQLite(t *testing.T) {
 		t.Error("Table not created")
 	}
 
-	// Testing Insert
-	var i1 RowValues
+	// Testing Row Insert
+	var i1 RowData
 	i1.TableName = "users"
 	i1.ColumnNames = "first_name, last_name, password, role, enabled"
 	i1.Values = []string{"john", "smith", "123", "1", "Y"}
 
-	db.Insert(dbHandler, &i1)
+	db.InsertRow(dbHandler, &i1)
+
+	// Testing Bulk Insert
+	var i2 BulkValues
+	i2.TableName = "roles"
+	i2.ColumnNames = "code, description, enabled"
+	i2.Values = append(i2.Values, []string{"ADMIN", "Full rights", "Y"})
+	i2.Values = append(i2.Values, []string{"USER", "Some rights", "Y"})
+	i2.Values = append(i2.Values, []string{"GUEST", "Few rights", "Y"})
+
+	db.InsertBulk(dbHandler, &i2)
 
 	// Testing Query - https://kylewbanks.com/blog/query-result-to-map-in-golang
 	rows, _ := db.Query(dbHandler, "select * from users where id=1")

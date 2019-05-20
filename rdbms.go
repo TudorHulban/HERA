@@ -33,6 +33,7 @@ type SchemaDDL struct {
 
 // RowValues - to be used for insert single row
 type RowData struct {
+	TableName   string
 	ColumnNames string
 	Values      []string
 }
