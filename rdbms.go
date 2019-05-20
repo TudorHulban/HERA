@@ -93,30 +93,24 @@ func SliceToInterface(slice interface{}) []interface{} {
 	return result
 }
 
+// RowsToSlice - https://kylewbanks.com/blog/query-result-to-map-in-golang
 func RowsToSlice(pRows *sql.Rows) (*TableData, error) {
 	d := new(TableData)
-
-	columns, _ := pRows.Columns()
-	cols := make([]interface{}, len(columns))
-
-	for _, v := range columns {
-		d.ColumnNames = append(d.ColumnNames, v)
-	}
+	d.ColumnNames, _ = pRows.Columns()
 
 	for pRows.Next() {
-		colsPointers := make([]interface{}, len(columns)) // initialize pointers for each row
-
-		for i, _ := range cols {
-			colsPointers[i] = &cols[i]
+		columns := make([]interface{}, len(d.ColumnNames))
+		columnPointers := make([]interface{}, len(d.ColumnNames))
+		for i, _ := range columns {
+			columnPointers[i] = &columns[i]
 		}
 
-		err := pRows.Scan(colsPointers...)
+		err := pRows.Scan(columnPointers...)
 		if err != nil {
 			log.Println("scan: ", err)
 			return nil, err
 		}
-
-		d.Data = append(d.Data, colsPointers)
+		d.Data = append(d.Data, columnPointers)
 	}
 	return d, nil
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"os"
-
 	"testing"
 )
 
@@ -47,7 +46,7 @@ func TestSQLite(t *testing.T) {
 
 	db.InsertBulk(dbHandler, &i2)
 
-	// Testing Query - https://kylewbanks.com/blog/query-result-to-map-in-golang
+	// Testing Query
 	rows, err := db.Query(dbHandler, "select * from users where id=1")
 	if err != nil {
 		t.Error("Query error")
@@ -69,7 +68,7 @@ func TestSQLite(t *testing.T) {
 
 	for k1, v1 := range bulk.Data {
 		for k2, v2 := range v1 {
-			log.Println("row: ", k1, "field: ", k2, "value: ", *v2.(*interface{}))
+			log.Println("row: ", k1, "field: ", bulk.ColumnNames[k2], "value: ", *v2.(*interface{}))
 		}
 	}
 
