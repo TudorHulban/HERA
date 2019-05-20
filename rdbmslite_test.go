@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+
 	"testing"
 )
 
@@ -47,31 +48,29 @@ func TestSQLite(t *testing.T) {
 	db.InsertBulk(dbHandler, &i2)
 
 	// Testing Query - https://kylewbanks.com/blog/query-result-to-map-in-golang
-	rows, _ := db.Query(dbHandler, "select * from users where id=1")
-	columns, _ := rows.Columns()
+	rows, err := db.Query(dbHandler, "select * from users where id=1")
+	if err != nil {
+		t.Error("Query error")
+	}
+	log.Println(rows.ColumnNames)
+	rowData := rows.Data[0]
 
-	for rows.Next() {
-		cols := make([]interface{}, len(columns))
-		colsPointers := make([]interface{}, len(columns))
-		for i, _ := range cols {
-			colsPointers[i] = &cols[i]
-		}
+	for k, v := range rowData {
+		log.Println(k, *v.(*interface{}))
+	}
 
-		err := rows.Scan(colsPointers...)
-		if err != nil {
-			log.Println("scan: ", err)
-		}
+	// Testing Query - multiple rows returned
+	bulk, err := db.Query(dbHandler, "select * from roles")
+	if err != nil {
+		t.Error("Query error")
+	}
+	log.Println(bulk.ColumnNames)
+	log.Println("rows returned: ", len(bulk.Data))
 
-		type cellValue struct {
-			columnName string
-			cellData   interface{}
+	for k1, v1 := range bulk.Data {
+		for k2, v2 := range v1 {
+			log.Println("row: ", k1, "field: ", k2, "value: ", *v2.(*interface{}))
 		}
-		m := []cellValue{}
-
-		for k, colName := range columns {
-			m = append(m, cellValue{columnName: colName, cellData: *colsPointers[k].(*interface{})})
-		}
-		log.Print("m:", m)
 	}
 
 	_, err = dbHandler.Exec("drop table users")

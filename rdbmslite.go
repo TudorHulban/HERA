@@ -97,6 +97,17 @@ func (r DBSQLiteInfo) InsertBulk(pDB *sql.DB, pBulk *BulkValues) error {
 	return nil
 }
 
-func (r DBSQLiteInfo) Query(pDB *sql.DB, pSQL string) (*sql.Rows, error) {
-	return pDB.Query(pSQL)
+func (r DBSQLiteInfo) Query(pDB *sql.DB, pSQL string) (*TableData, error) {
+	tableData := new(TableData)
+
+	rows, err := pDB.Query(pSQL)
+	if err != nil {
+		return nil, err
+	}
+	tableData, err = RowsToSlice(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return tableData, nil
 }
