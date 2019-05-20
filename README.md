@@ -13,6 +13,8 @@ first_name text not null,
 last_name text not null,
 password text not null,
 role integer not null,
+created text not null,
+last_loghin text not null,
 enabled text not null)
 ```
 
