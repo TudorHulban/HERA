@@ -4,6 +4,19 @@
 sudo apt-get install sqlite3 libsqlite3-dev
 ```
 
+Structures
+```go
+type RowValues struct {
+	ColumnNames []string
+	Values      []interface{}
+}
+
+type TableData struct {
+	ColumnNames []string
+	Data        [][]interface{}
+}
+```
+
 ```sql
 drop table users
 
