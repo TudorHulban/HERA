@@ -15,6 +15,19 @@ func testNewTable(pRDBMS RDBMS, pTableInfo *TableDDL) error {
 	return pRDBMS.NewTable(dbHandler, *pTableInfo)
 }
 
+func testTableExists(pRDBMS RDBMS, pDatabase, pTableName string) error {
+	dbHandler, err := pRDBMS.NewConnection()
+	if err != nil {
+		return err
+	}
+	defer dbHandler.Close()
+	return pRDBMS.TableExists(dbHandler, pDatabase, pTableName)
+}
+
+func testRowInsert(pRDBMS RDBMS, pTableName string, pValues *RowData) error {
+
+}
+
 func TestMaria(t *testing.T) {
 	var db DBMariaInfo
 	db.ip = "192.168.1.13"
@@ -23,9 +36,9 @@ func TestMaria(t *testing.T) {
 	db.dbName = "devops"
 	db.port = 3306
 
-	err := testNewTable(db, ddlUsers())
-	if err != nil {
-		t.Error("dbHandler: ", err)
+	err01 := testNewTable(db, ddlUsers())
+	if err01 != nil {
+		t.Error("dbHandler: ", err01)
 	}
 }
 
@@ -33,9 +46,14 @@ func TestSQLite(t *testing.T) {
 	var db DBSQLiteInfo
 	db.DBFile = "lite.db"
 
-	err := testNewTable(db, ddlUsers())
-	if err != nil {
-		t.Error("dbHandler: ", err)
+	err01 := testNewTable(db, ddlUsers())
+	if err01 != nil {
+		t.Error("dbHandler: ", err01)
+	}
+
+	err02 := testTableExists(db, "", ddlUsers().Name)
+	if err02 != nil {
+		t.Error("dbHandler: ", err01)
 	}
 
 	/*

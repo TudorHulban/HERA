@@ -2,6 +2,7 @@ package hera
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"strconv"
 	"strings"
@@ -27,13 +28,17 @@ func (r DBMariaInfo) NewConnection() (*sql.DB, error) {
 	return instance, err
 }
 
-func (r DBMariaInfo) TableExists(pDB *sql.DB, pDatabase, pTable string) bool {
+func (r DBMariaInfo) TableExists(pDB *sql.DB, pDatabase, pTableName string) error {
 	var occurences bool
-
-	theDML := "select count(1) from information_schema.tables WHERE table_schema=" + "'" + pDatabase + "'" + " AND table_name=" + "'" + pTable + "'" + " limit 1"
-	_ = pDB.QueryRow(theDML).Scan(&occurences)
-
-	return occurences
+	theDML := "select count(1) from information_schema.tables WHERE table_schema=" + "'" + pDatabase + "'" + " AND table_name=" + "'" + pTableName + "'" + " limit 1"
+	err := pDB.QueryRow(theDML).Scan(&occurences)
+	if err != nil {
+		return err
+	}
+	if occurences {
+		return errors.New("Table does not exist")
+	}
+	return nil
 }
 
 func (r DBMariaInfo) NewTable(pDB *sql.DB, pDDL TableDDL) error {
@@ -66,7 +71,7 @@ func (r DBMariaInfo) NewTable(pDB *sql.DB, pDDL TableDDL) error {
 	return err
 }
 
-func (r DBMariaInfo) CreateTable(pDB *sql.DB, pDatabase, pTableName, pDDL string, pColumnPKAutoincrement int) (bool, error) {
+func (r DBMariaInfo) CreateTable(pDB *sql.DB, pDatabase, pTableName, pDDL string, pColumnPKAutoincrement int) error {
 	theDDL := pDDL
 
 	if pColumnPKAutoincrement > 0 {
@@ -75,9 +80,9 @@ func (r DBMariaInfo) CreateTable(pDB *sql.DB, pDatabase, pTableName, pDDL string
 	theDDL = "CREATE TABLE " + pTableName + " (" + strings.Replace(theDDL, "\"", "", -1) + ")"
 	_, err := pDB.Exec(theDDL)
 	if err != nil {
-		return false, err
+		return err
 	}
-	return r.TableExists(pDB, pDatabase, pTableName), nil
+	return r.TableExists(pDB, pDatabase, pTableName)
 }
 
 func (r DBMariaInfo) SingleInsert(pDB *sql.DB, pTableName string, pValues []string) error {

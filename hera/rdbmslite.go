@@ -2,6 +2,7 @@ package hera
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"strings"
 
@@ -22,11 +23,18 @@ func (r DBSQLiteInfo) NewConnection() (*sql.DB, error) {
 	return instance, err
 }
 
-func (r DBSQLiteInfo) TableExists(pDB *sql.DB, pTable string) bool {
+// TableExists - returns nil if table exists
+func (r DBSQLiteInfo) TableExists(pDB *sql.DB, pDatabase, pTableName string) error {
 	var occurences int
-	_ = pDB.QueryRow("SELECT count(*) FROM sqlite_master WHERE type='table' AND name=?", pTable).Scan(&occurences)
+	err := pDB.QueryRow("SELECT count(*) FROM sqlite_master WHERE type='table' AND name=?", pTableName).Scan(&occurences)
+	if err != nil {
+		return err
+	}
 	//log.Println(pTable, occurences)
-	return (occurences == 1)
+	if occurences != 1 {
+		return errors.New("Table does not exist")
+	}
+	return nil
 }
 
 func (r DBSQLiteInfo) NewTable(pDB *sql.DB, pDDL TableDDL) error {
