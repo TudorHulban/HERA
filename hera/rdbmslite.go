@@ -1,4 +1,4 @@
-package main
+package hera
 
 import (
 	"database/sql"
@@ -17,8 +17,8 @@ func (r DBSQLiteInfo) NewConnection() (*sql.DB, error) {
 	var err error
 	onceDB.Do(func() {
 		instance, err = sql.Open("sqlite3", r.DBFile)
+		err = instance.Ping()
 	})
-
 	return instance, err
 }
 

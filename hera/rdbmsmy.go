@@ -1,8 +1,8 @@
-package main
+package hera
 
 import (
 	"database/sql"
-
+	"log"
 	"strconv"
 	"strings"
 
@@ -14,18 +14,16 @@ type DBMariaInfo struct {
 	port     int
 	user     string
 	password string
+	dbName   string
 }
 
-func (r DBMariaInfo) NewConnection(pDBName string) (*sql.DB, error) {
-
+func (r DBMariaInfo) NewConnection() (*sql.DB, error) {
 	instance := new(sql.DB)
 	var err error
-
-	dbinfo := r.user + ":" + r.password + "@tcp(" + r.ip + ":" + strconv.Itoa(r.port) + ")/" + pDBName
 	onceDB.Do(func() {
-		instance, err = sql.Open("mysql", dbinfo)
+		instance, err = sql.Open("mysql", r.user+":"+r.password+"@tcp("+r.ip+":"+strconv.Itoa(r.port)+")/"+r.dbName)
+		err = instance.Ping()
 	})
-
 	return instance, err
 }
 
@@ -36,6 +34,36 @@ func (r DBMariaInfo) TableExists(pDB *sql.DB, pDatabase, pTable string) bool {
 	_ = pDB.QueryRow(theDML).Scan(&occurences)
 
 	return occurences
+}
+
+func (r DBMariaInfo) NewTable(pDB *sql.DB, pDDL TableDDL) error {
+	var fieldDDL string
+	var columnDDL = func(pDDL ColumnDef) string {
+		var notnull, pk string
+
+		if pDDL.NotNull {
+			notnull = " " + "not null"
+		}
+		if pDDL.PrimaryKey {
+			pk = " " + "PRIMARY KEY"
+		}
+		ddl := pDDL.Name + " " + pDDL.Type + pk + notnull
+		return ddl
+	}
+
+	for k, v := range pDDL.TableFields {
+		if k == 0 {
+			fieldDDL = columnDDL(v)
+		} else {
+			fieldDDL = fieldDDL + "," + columnDDL(v)
+		}
+	}
+
+	ddl := "create table " + pDDL.Name + "(" + fieldDDL + ")"
+	log.Println("DDL: ", ddl)
+
+	_, err := pDB.Exec(ddl)
+	return err
 }
 
 func (r DBMariaInfo) CreateTable(pDB *sql.DB, pDatabase, pTableName, pDDL string, pColumnPKAutoincrement int) (bool, error) {

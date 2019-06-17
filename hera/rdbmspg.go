@@ -1,9 +1,8 @@
-package main
+package hera
 
 import (
 	"database/sql"
 	"fmt"
-	"log"
 
 	"strings"
 
@@ -19,20 +18,13 @@ type DBPostgresInfo struct {
 }
 
 func (r DBPostgresInfo) NewConnection() (*sql.DB, error) {
-
 	instance := new(sql.DB)
 	var err error
-
 	dbinfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", r.ip, r.port, r.user, r.password, r.dbName)
 	onceDB.Do(func() {
 		instance, err = sql.Open("postgres", dbinfo)
+		err = instance.Ping()
 	})
-
-	if err != nil {
-		log.Println("NewConnection: ", err)
-		return instance, err
-	}
-	err = instance.Ping()
 	return instance, err
 }
 

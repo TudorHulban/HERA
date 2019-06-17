@@ -1,4 +1,4 @@
-package main
+package hera
 
 import (
 	"database/sql"
@@ -11,8 +11,13 @@ import (
 
 var onceDB sync.Once
 
-// --------- DDL
+// --------- Decouple
+type RDBMS interface {
+	NewConnection() (*sql.DB, error)
+	NewTable(pDB *sql.DB, pDDL TableDDL) error
+}
 
+// --------- DDL
 type ColumnDef struct {
 	Name       string
 	Type       string
