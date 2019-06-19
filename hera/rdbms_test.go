@@ -46,13 +46,15 @@ func TestMaria(t *testing.T) {
 	defer dbHandler.Close()
 
 	err = hasTable(dbHandler, db, db.dbName, ddlUsers().Name)
-	if err != nil {
+	if err == nil {
 		log.Println(db.dbName + " contains " + ddlUsers().Name)
 
 		err = dropTable(dbHandler, ddlUsers().Name)
 		if err != nil {
 			log.Println("cannot drop table in " + db.dbName + " named " + ddlUsers().Name)
 			t.Error("drop table: ", err)
+		} else {
+			log.Println("dropped in " + db.dbName + " table named " + ddlUsers().Name)
 		}
 	} else {
 		log.Println(db.dbName + " does NOT contains " + ddlUsers().Name)
@@ -60,18 +62,18 @@ func TestMaria(t *testing.T) {
 
 	err = createTable(dbHandler, db, ddlUsers())
 	if err != nil {
-		t.Error("NewTable: ", err)
+		t.Error("createTable: ", err)
+	}
+
+	err = hasTable(dbHandler, db, db.dbName, ddlUsers().Name)
+	if err != nil {
+		t.Error("table "+ddlUsers().Name+" not created: ", err)
 	}
 
 	/*
 
 
-		err = createTable(db, ddlUsers())
 
-		err := testTableExists(db, "", ddlUsers().Name)
-		if err != nil {
-			t.Error("TableExists: ", err01)
-		}
 
 		err03 := testDropTable(db, ddlUsers().Name)
 		if err03 != nil {
