@@ -48,8 +48,7 @@ func (r DBSQLiteInfo) NewTable(pDB *sql.DB, pDDL TableDDL) error {
 		if pDDL.PrimaryKey {
 			pk = " " + "PRIMARY KEY"
 		}
-		ddl := pDDL.Name + " " + pDDL.Type + pk + notnull
-		return ddl
+		return pDDL.Name + " " + pDDL.Type + pk + notnull
 	}
 
 	for k, v := range pDDL.TableFields {

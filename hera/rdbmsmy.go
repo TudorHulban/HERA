@@ -28,19 +28,6 @@ func (r DBMariaInfo) NewConnection() (*sql.DB, error) {
 	return instance, err
 }
 
-func (r DBMariaInfo) TableExists(pDB *sql.DB, pDatabase, pTableName string) error {
-	var occurences bool
-	theDML := "select count(1) from information_schema.tables WHERE table_schema=" + "'" + pDatabase + "'" + " AND table_name=" + "'" + pTableName + "'" + " limit 1"
-	err := pDB.QueryRow(theDML).Scan(&occurences)
-	if err != nil {
-		return err
-	}
-	if occurences {
-		return errors.New("Table does not exist")
-	}
-	return nil
-}
-
 func (r DBMariaInfo) NewTable(pDB *sql.DB, pDDL TableDDL) error {
 	var fieldDDL string
 	var columnDDL = func(pDDL ColumnDef) string {
@@ -69,6 +56,21 @@ func (r DBMariaInfo) NewTable(pDB *sql.DB, pDDL TableDDL) error {
 
 	_, err := pDB.Exec(ddl)
 	return err
+}
+
+func (r DBMariaInfo) TableExists(pDB *sql.DB, pDatabase, pTableName string) error {
+	var occurences bool
+	theDML := "select count(1) from information_schema.tables WHERE table_schema=" + "'" + pDatabase + "'" + " AND table_name=" + "'" + pTableName + "'" + " limit 1"
+	log.Println("Maria, Table Exists: ", theDML)
+
+	err := pDB.QueryRow(theDML).Scan(&occurences)
+	if err != nil {
+		return err
+	}
+	if occurences {
+		return errors.New("Table does not exist")
+	}
+	return nil
 }
 
 func (r DBMariaInfo) CreateTable(pDB *sql.DB, pDatabase, pTableName, pDDL string, pColumnPKAutoincrement int) error {

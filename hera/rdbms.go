@@ -16,7 +16,7 @@ type RDBMS interface {
 	NewConnection() (*sql.DB, error)
 	NewTable(pDB *sql.DB, pDDL TableDDL) error
 	TableExists(pDB *sql.DB, pDatabase, pTableName string) error
-	InsertRow(pDB *sql.DB, pValues *RowData) error
+	//InsertRow(pDB *sql.DB, pValues *RowData) error
 }
 
 // --------- DDL
