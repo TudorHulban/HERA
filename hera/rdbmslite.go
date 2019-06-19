@@ -67,7 +67,6 @@ func (r DBSQLiteInfo) NewTable(pDB *sql.DB, pDDL TableDDL) error {
 }
 
 func (r DBSQLiteInfo) InsertRow(pDB *sql.DB, pValues *RowData) error {
-
 	theDDL := "insert into " + pValues.TableName + "(" + pValues.ColumnNames + ")" + " values(" + "\"" + strings.Join(pValues.Values, "\""+","+"\"") + "\"" + ")"
 	_, err := pDB.Exec(theDDL)
 	return err

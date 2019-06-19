@@ -5,20 +5,25 @@ import (
 	"errors"
 	"log"
 
-	//"log"
 	//"os"
 	"testing"
 )
 
-func createTable(pDB *sql.DB, pRDBMS RDBMS, pTableInfo *TableDDL) error {
-	return pRDBMS.NewTable(pDB, *pTableInfo)
-}
+func cleanTable(pDB *sql.DB, pRDBMS RDBMS, pDatabase, pTableName string) error {
+	err := pRDBMS.TableExists(pDB, pDatabase, pTableName)
+	if err != nil {
+		log.Println(pDatabase + " does NOT contains " + pTableName)
+		return err
+	}
+	log.Println(pDatabase + " contains " + pTableName)
 
-func hasTable(pDB *sql.DB, pRDBMS RDBMS, pDatabase, pTableName string) error {
-	return pRDBMS.TableExists(pDB, pDatabase, pTableName)
-}
-
-func createRow(pRDBMS RDBMS, pTableName string, pValues *RowData) error {
+	err = dropTable(pDB, pTableName)
+	if err != nil {
+		log.Println("cannot drop table in " + pDatabase + " named " + pTableName)
+		return errors.New("drop table: " + err.Error())
+	} else {
+		log.Println("dropped in " + pDatabase + " table named " + pTableName)
+	}
 	return nil
 }
 
@@ -45,66 +50,53 @@ func TestMaria(t *testing.T) {
 	}
 	defer dbHandler.Close()
 
-	err = hasTable(dbHandler, db, db.dbName, ddlUsers().Name)
-	if err == nil {
-		log.Println(db.dbName + " contains " + ddlUsers().Name)
+	cleanTable(dbHandler, db, db.dbName, ddlUsers().Name)
+	cleanTable(dbHandler, db, db.dbName, ddlRoles().Name)
 
-		err = dropTable(dbHandler, ddlUsers().Name)
-		if err != nil {
-			log.Println("cannot drop table in " + db.dbName + " named " + ddlUsers().Name)
-			t.Error("drop table: ", err)
-		} else {
-			log.Println("dropped in " + db.dbName + " table named " + ddlUsers().Name)
-		}
-	} else {
-		log.Println(db.dbName + " does NOT contains " + ddlUsers().Name)
-	}
-
-	err = createTable(dbHandler, db, ddlUsers())
+	err = db.NewTable(dbHandler, *ddlUsers())
 	if err != nil {
 		t.Error("createTable: ", err)
 	}
 
-	err = hasTable(dbHandler, db, db.dbName, ddlUsers().Name)
+	err = db.TableExists(dbHandler, db.dbName, ddlUsers().Name)
 	if err != nil {
 		t.Error("table "+ddlUsers().Name+" not created: ", err)
 	}
 
-	/*
+	err = db.NewTable(dbHandler, *ddlRoles())
+	if err != nil {
+		t.Error("createTable: ", err)
+	}
 
+	err = db.TableExists(dbHandler, db.dbName, ddlRoles().Name)
+	if err != nil {
+		t.Error("table "+ddlRoles().Name+" not created: ", err)
+	}
 
+	// Testing Row Insert
+	var i1 RowData
+	i1.TableName = ddlUsers().Name
+	i1.ColumnNames = "first_name, last_name, password, role, enabled"
+	i1.Values = []string{"john", "smith", "123", "1", "Y"}
 
+	err = db.InsertRow(dbHandler, &i1)
+	if err != nil {
+		t.Error("insert row into "+ddlUsers().Name+" dit not work: ", err)
+	}
 
-		err03 := testDropTable(db, ddlUsers().Name)
-		if err03 != nil {
-			t.Error("DropTable: ", err01)
-		}
+	// Testing Bulk Insert
+	var i2 BulkValues
+	i2.TableName = ddlRoles().Name
+	i2.ColumnNames = "code, description, enabled"
+	i2.Values = append(i2.Values, []string{"ADMIN", "Full rights", "Y"})
+	i2.Values = append(i2.Values, []string{"USER", "Some rights", "Y"})
+	i2.Values = append(i2.Values, []string{"GUEST", "Few rights", "Y"})
 
-	*/
+	err = db.InsertBulk(dbHandler, &i2)
+	if err != nil {
+		t.Error("insert bulk into "+ddlRoles().Name+" dit not work: ", err)
+	}
 }
-
-/*
-func TestSQLite(t *testing.T) {
-	var db DBSQLiteInfo
-	db.DBFile = "lite.db"
-
-	err01 := testNewTable(db, ddlUsers())
-	if err01 != nil {
-		t.Error("NewTable: ", err01)
-	}
-
-	err02 := testTableExists(db, "", ddlUsers().Name)
-	if err02 != nil {
-		t.Error("TableExists: ", err01)
-	}
-
-	err03 := testDropTable(db, ddlUsers().Name)
-	if err03 != nil {
-		t.Error("DropTable: ", err01)
-	}
-}
-
-*/
 
 /*
 	db := DBSQLiteInfo{dbPath}
@@ -113,37 +105,6 @@ func TestSQLite(t *testing.T) {
 		t.Error("dbHandler: ", err)
 	}
 	defer dbHandler.Close()
-
-	db.NewTable(dbHandler, *ddlUsers())
-	db.NewTable(dbHandler, *ddlRoles())
-
-	ex := db.TableExists(dbHandler, "users")
-	if !ex {
-		t.Error("Table not created")
-	}
-
-	ex = db.TableExists(dbHandler, "roles")
-	if !ex {
-		t.Error("Table not created")
-	}
-
-	// Testing Row Insert
-	var i1 RowData
-	i1.TableName = "users"
-	i1.ColumnNames = "first_name, last_name, password, role, enabled"
-	i1.Values = []string{"john", "smith", "123", "1", "Y"}
-
-	db.InsertRow(dbHandler, &i1)
-
-	// Testing Bulk Insert
-	var i2 BulkValues
-	i2.TableName = "roles"
-	i2.ColumnNames = "code, description, enabled"
-	i2.Values = append(i2.Values, []string{"ADMIN", "Full rights", "Y"})
-	i2.Values = append(i2.Values, []string{"USER", "Some rights", "Y"})
-	i2.Values = append(i2.Values, []string{"GUEST", "Few rights", "Y"})
-
-	db.InsertBulk(dbHandler, &i2)
 
 	// Testing Query
 	rows, err := db.Query(dbHandler, "select * from users where id=1")

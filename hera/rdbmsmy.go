@@ -7,9 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql" // imported for Maria DB
 )
 
+// DBMariaInfo - connection details for Maria DB type of connections
 type DBMariaInfo struct {
 	ip       string
 	port     int
@@ -18,6 +19,7 @@ type DBMariaInfo struct {
 	dbName   string
 }
 
+// NewConnection - singleton, only one connection per DB
 func (r DBMariaInfo) NewConnection() (*sql.DB, error) {
 	instance := new(sql.DB)
 	var err error
@@ -28,6 +30,7 @@ func (r DBMariaInfo) NewConnection() (*sql.DB, error) {
 	return instance, err
 }
 
+// NewTable - Primary Key field is auto incremented
 func (r DBMariaInfo) NewTable(pDB *sql.DB, pDDL TableDDL) error {
 	var fieldDDL string
 	var columnDDL = func(pDDL ColumnDef) string {
@@ -37,7 +40,7 @@ func (r DBMariaInfo) NewTable(pDB *sql.DB, pDDL TableDDL) error {
 			notnull = " " + "not null"
 		}
 		if pDDL.PrimaryKey {
-			pk = " " + "PRIMARY KEY"
+			pk = " " + "AUTO_INCREMENT PRIMARY KEY"
 		}
 		ddl := pDDL.Name + " " + pDDL.Type + pk + notnull
 		return ddl
@@ -50,7 +53,6 @@ func (r DBMariaInfo) NewTable(pDB *sql.DB, pDDL TableDDL) error {
 			fieldDDL = fieldDDL + "," + columnDDL(v)
 		}
 	}
-
 	ddl := "create table " + pDDL.Name + "(" + fieldDDL + ")"
 	log.Println("DDL: ", ddl)
 
@@ -74,30 +76,16 @@ func (r DBMariaInfo) TableExists(pDB *sql.DB, pDatabase, pTableName string) erro
 	return errors.New("Table " + pTableName + " does not exist in " + pDatabase)
 }
 
-func (r DBMariaInfo) CreateTable(pDB *sql.DB, pDatabase, pTableName, pDDL string, pColumnPKAutoincrement int) error {
-	theDDL := pDDL
-
-	if pColumnPKAutoincrement > 0 {
-		theDDL = "\"id\" serial," + pDDL
-	}
-	theDDL = "CREATE TABLE " + pTableName + " (" + strings.Replace(theDDL, "\"", "", -1) + ")"
+// InsertRow - single row only
+func (r DBMariaInfo) InsertRow(pDB *sql.DB, pValues *RowData) error {
+	theDDL := "insert into " + pValues.TableName + "(" + pValues.ColumnNames + ")" + " values(" + "\"" + strings.Join(pValues.Values, "\""+","+"\"") + "\"" + ")"
 	_, err := pDB.Exec(theDDL)
-	if err != nil {
-		return err
-	}
-	return r.TableExists(pDB, pDatabase, pTableName)
-}
-
-func (r DBMariaInfo) SingleInsert(pDB *sql.DB, pTableName string, pValues []string) error {
-	theDDL := "insert into " + pTableName + " values(" + "\"" + strings.Join(pValues, "\""+","+"\"") + "\"" + ")"
-	_, err := pDB.Exec(theDDL)
-
 	return err
 }
 
-func (r DBMariaInfo) BulkInsert(pDB *sql.DB, pTableName string, pColumnNames []string, pValues [][]string) error {
-
-	theQuestionMarks := returnNoValues(pValues[0], "?")
+// InsertBulk - insert for multiple rows
+func (r DBMariaInfo) InsertBulk(pDB *sql.DB, pBulk *BulkValues) error {
+	theQuestionMarks := returnNoValues(pBulk.Values[0], "?")
 
 	dbTransaction, err := pDB.Begin() // DB Transaction Start
 	if err != nil {
@@ -105,18 +93,18 @@ func (r DBMariaInfo) BulkInsert(pDB *sql.DB, pTableName string, pColumnNames []s
 		return err
 	}
 
-	statement := "insert into " + pTableName + "(" + strings.Join(pColumnNames, ",") + ")" + " values " + theQuestionMarks
+	statement := "insert into " + pBulk.TableName + "(" + pBulk.ColumnNames + ")" + " values " + theQuestionMarks
+	log.Println("insert bulk statement: ", statement)
 	dml, err := dbTransaction.Prepare(statement)
-	defer dml.Close()
-
 	if err != nil {
 		dbTransaction.Rollback()
 		return err
 	}
+	defer dml.Close()
 
-	for _, columnValues := range pValues {
+	for _, columnValues := range pBulk.Values {
+		log.Println(SliceToInterface(columnValues)...)
 		_, err := dml.Exec(SliceToInterface(columnValues)...)
-
 		if err != nil {
 			dbTransaction.Rollback()
 			return err
