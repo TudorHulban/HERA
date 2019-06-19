@@ -113,3 +113,18 @@ func (r DBMariaInfo) InsertBulk(pDB *sql.DB, pBulk *BulkValues) error {
 	dbTransaction.Commit() // DB Transaction End
 	return nil
 }
+
+func (r DBMariaInfo) Query(pDB *sql.DB, pSQL string) (*TableData, error) {
+	tableData := new(TableData)
+
+	rows, err := pDB.Query(pSQL)
+	if err != nil {
+		return nil, err
+	}
+	tableData, err = RowsToSlice(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return tableData, nil
+}
