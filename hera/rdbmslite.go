@@ -114,6 +114,5 @@ func (r DBSQLiteInfo) Query(pDB *sql.DB, pSQL string) (*TableData, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return tableData, nil
 }

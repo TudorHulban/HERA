@@ -5,7 +5,7 @@ import (
 	"errors"
 	"log"
 
-	//"os"
+	"os"
 	"testing"
 )
 
@@ -114,15 +114,10 @@ func TestMaria(t *testing.T) {
 */
 
 func TestSQLite(t *testing.T) {
-	db := DBSQLiteInfo{"lite.dbf"}
-	dbHandler, err := db.NewConnection()
-	if err != nil {
-		t.Error("dbHandler: ", err)
-	}
-	defer dbHandler.Close()
-
+	dbPath := "lite.dbf"
+	db := DBSQLiteInfo{dbPath}
 	// Connect DB
-	dbHandler, err = db.NewConnection()
+	dbHandler, err := db.NewConnection()
 	if err != nil {
 		t.Error("could not connect: ", err)
 	}
@@ -187,11 +182,6 @@ func TestSQLite(t *testing.T) {
 		log.Println("column ", k, *v.(*interface{}))
 	}
 
-}
-
-/*
-
-
 	// Testing Query - multiple rows returned
 	bulk, err := db.Query(dbHandler, "select * from roles")
 	if err != nil {
@@ -210,7 +200,7 @@ func TestSQLite(t *testing.T) {
 	if err != nil {
 		t.Error("Database file not removed")
 	}
-*/
+}
 
 func ddlUsers() *TableDDL {
 	t := TableDDL{Name: "users"}
@@ -220,7 +210,6 @@ func ddlUsers() *TableDDL {
 	t.TableFields = append(t.TableFields, ColumnDef{Name: "password", Type: "text", PrimaryKey: false, NotNull: true})
 	t.TableFields = append(t.TableFields, ColumnDef{Name: "role", Type: "integer", PrimaryKey: false, NotNull: true})
 	t.TableFields = append(t.TableFields, ColumnDef{Name: "enabled", Type: "text", PrimaryKey: false, NotNull: true})
-
 	return &t
 }
 
@@ -230,6 +219,5 @@ func ddlRoles() *TableDDL {
 	t.TableFields = append(t.TableFields, ColumnDef{Name: "code", Type: "text", PrimaryKey: false, NotNull: true})
 	t.TableFields = append(t.TableFields, ColumnDef{Name: "description", Type: "text", PrimaryKey: false, NotNull: true})
 	t.TableFields = append(t.TableFields, ColumnDef{Name: "enabled", Type: "text", PrimaryKey: false, NotNull: true})
-
 	return &t
 }
