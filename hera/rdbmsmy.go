@@ -6,9 +6,12 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 
 	_ "github.com/go-sql-driver/mysql" // imported for Maria DB
 )
+
+var onceDBMaria sync.Once
 
 // DBMariaInfo - connection details for Maria DB type of connections
 type DBMariaInfo struct {
@@ -23,7 +26,7 @@ type DBMariaInfo struct {
 func (r DBMariaInfo) NewConnection() (*sql.DB, error) {
 	instance := new(sql.DB)
 	var err error
-	onceDB.Do(func() {
+	onceDBMaria.Do(func() {
 		instance, err = sql.Open("mysql", r.user+":"+r.password+"@tcp("+r.ip+":"+strconv.Itoa(r.port)+")/"+r.dbName)
 		err = instance.Ping()
 	})
@@ -114,6 +117,7 @@ func (r DBMariaInfo) InsertBulk(pDB *sql.DB, pBulk *BulkValues) error {
 	return nil
 }
 
+// Query - returns data as slice of slice of interface{}
 func (r DBMariaInfo) Query(pDB *sql.DB, pSQL string) (*TableData, error) {
 	tableData := new(TableData)
 

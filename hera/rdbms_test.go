@@ -5,7 +5,7 @@ import (
 	"errors"
 	"log"
 
-	_ "os"
+	"os"
 	"testing"
 )
 
@@ -34,7 +34,6 @@ func dropTable(pDB *sql.DB, pTableName string) error {
 	return err
 }
 
-/*
 func TestSQLite(t *testing.T) {
 	var db DBSQLiteInfo
 	db.DBFile = "lite.dbf"
@@ -45,7 +44,6 @@ func TestSQLite(t *testing.T) {
 		t.Error("Database file not removed")
 	}
 }
-*/
 
 func TestMaria(t *testing.T) {
 	var db DBMariaInfo
@@ -120,7 +118,15 @@ func testDB(pRDBMS RDBMS, pDatabase string, t *testing.T) {
 	rowData := rows.Data[0]
 
 	for k, v := range rowData {
-		log.Println("column ", k, *v.(*interface{}))
+		rowVal := *v.(*interface{})
+		switch rowVal.(type) {
+		case []byte:
+			{
+				log.Println("column ", k, string(rowVal.([]byte)))
+			}
+		default:
+			log.Println("column ", k, rowVal)
+		}
 	}
 }
 

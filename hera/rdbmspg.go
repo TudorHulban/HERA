@@ -3,11 +3,13 @@ package hera
 import (
 	"database/sql"
 	"fmt"
-
 	"strings"
+	"sync"
 
-	_ "github.com/lib/pq"
+	_ "github.com/lib/pq" // imported for Postgres DB
 )
+
+var onceDBPg sync.Once
 
 type DBPostgresInfo struct {
 	ip       string
@@ -21,7 +23,7 @@ func (r DBPostgresInfo) NewConnection() (*sql.DB, error) {
 	instance := new(sql.DB)
 	var err error
 	dbinfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", r.ip, r.port, r.user, r.password, r.dbName)
-	onceDB.Do(func() {
+	onceDBPg.Do(func() {
 		instance, err = sql.Open("postgres", dbinfo)
 		err = instance.Ping()
 	})

@@ -5,9 +5,12 @@ import (
 	"errors"
 	"log"
 	"strings"
+	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
 )
+
+var onceDBSQLite sync.Once
 
 type DBSQLiteInfo struct {
 	DBFile string //holds SQLIte DB File
@@ -16,7 +19,7 @@ type DBSQLiteInfo struct {
 func (r DBSQLiteInfo) NewConnection() (*sql.DB, error) {
 	instance := new(sql.DB)
 	var err error
-	onceDB.Do(func() {
+	onceDBSQLite.Do(func() {
 		instance, err = sql.Open("sqlite3", r.DBFile)
 		err = instance.Ping()
 	})
@@ -103,6 +106,7 @@ func (r DBSQLiteInfo) InsertBulk(pDB *sql.DB, pBulk *BulkValues) error {
 	return nil
 }
 
+// Query - returns data as slice of slice of interface{}
 func (r DBSQLiteInfo) Query(pDB *sql.DB, pSQL string) (*TableData, error) {
 	tableData := new(TableData)
 

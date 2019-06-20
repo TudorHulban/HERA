@@ -6,10 +6,7 @@ import (
 	"reflect"
 
 	"strings"
-	"sync"
 )
-
-var onceDB sync.Once
 
 // --------- Decouple
 type RDBMS interface {
