@@ -19,6 +19,7 @@ type RDBMS interface {
 	TableExists(pDB *sql.DB, pDatabase, pTableName string) error
 	InsertRow(pDB *sql.DB, pValues *RowData) error
 	InsertBulk(pDB *sql.DB, pBulk *BulkValues) error
+	Query(pDB *sql.DB, pSQL string) (*TableData, error)
 }
 
 // --------- DDL
