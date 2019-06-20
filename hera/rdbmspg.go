@@ -107,7 +107,6 @@ func (r DBPostgresInfo) InsertBulk(pDB *sql.DB, pBulk *BulkValues) error {
 
 	preparedStatem, err := dbTransaction.Prepare(statement)
 	if err != nil {
-		log.Println("------------------------ Rollback Prepare")
 		dbTransaction.Rollback()
 		return err
 	}
