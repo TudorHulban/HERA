@@ -106,8 +106,8 @@ func (r DBMariaInfo) InsertBulk(pDB *sql.DB, pBulk *BulkValues) error {
 	defer dml.Close()
 
 	for _, columnValues := range pBulk.Values {
-		log.Println(SliceToInterface(columnValues)...)
-		_, err := dml.Exec(SliceToInterface(columnValues)...)
+		log.Println(sliceToInterface(columnValues)...)
+		_, err := dml.Exec(sliceToInterface(columnValues)...)
 		if err != nil {
 			dbTransaction.Rollback()
 			return err

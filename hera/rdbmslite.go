@@ -95,7 +95,7 @@ func (r DBSQLiteInfo) InsertBulk(pDB *sql.DB, pBulk *BulkValues) error {
 	}
 
 	for _, columnValues := range pBulk.Values {
-		_, err := dml.Exec(SliceToInterface(columnValues)...)
+		_, err := dml.Exec(sliceToInterface(columnValues)...)
 
 		if err != nil {
 			dbTransaction.Rollback()

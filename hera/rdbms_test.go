@@ -137,14 +137,18 @@ func testDB(pRDBMS RDBMS, pDatabase string, t *testing.T) {
 
 	err = pRDBMS.InsertBulk(dbHandler, &i2)
 	if err != nil {
-		t.Error("insert bulk into "+ddlRoles().Name+" dit not work: ", err)
+		t.Error("insert bulk into "+ddlRoles().Name+" did not work: ", err)
 		return
 	}
-	// Testing Query
-	rows, err := pRDBMS.Query(dbHandler, "select * from users where id=1")
+	showQryResults(dbHandler, pRDBMS, "select * from users where id=1", t) // Testing Query - Single Insert
+	showQryResults(dbHandler, pRDBMS, "select * from roles", t)            // Testing Query - Bulk Insert
+}
+
+func showQryResults(pDB *sql.DB, pRDBMS RDBMS, pQuery string, t *testing.T) error {
+	rows, err := pRDBMS.Query(pDB, pQuery)
 	if err != nil {
 		t.Error("Query error")
-		return
+		return err
 	}
 	log.Println("Columns: ", rows.ColumnNames)
 	rowData := rows.Data[0]
@@ -160,6 +164,7 @@ func testDB(pRDBMS RDBMS, pDatabase string, t *testing.T) {
 			log.Println("column ", k, rowVal)
 		}
 	}
+	return nil
 }
 
 func ddlUsers() *TableDDL {
