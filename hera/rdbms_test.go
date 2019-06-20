@@ -34,10 +34,21 @@ func dropTable(pDB *sql.DB, pTableName string) error {
 	return err
 }
 
-func TestSQLite(t *testing.T) {
+func TestSQLite1(t *testing.T) {
 	var db DBSQLiteInfo
-	db.DBFile = "lite.dbf"
-	testDB(db, "", t)
+	db.DBFile = "lite01.dbf"
+	//testDB(db, "", t)
+
+	err := os.Remove(db.DBFile)
+	if err != nil {
+		t.Error("Database file not removed")
+	}
+}
+
+func TestSQLite2(t *testing.T) {
+	var db DBSQLiteInfo
+	db.DBFile = "lite02.dbf"
+	//testDB(db, "", t)
 
 	err := os.Remove(db.DBFile)
 	if err != nil {
@@ -52,6 +63,16 @@ func TestMaria(t *testing.T) {
 	db.password = "develop"
 	db.dbName = "devops"
 	db.port = 3306
+	//testDB(db, db.dbName, t)
+}
+
+func TestPostgres(t *testing.T) {
+	var db DBPostgresInfo
+	db.ip = "192.168.1.15"
+	db.user = "develop"
+	db.password = "develop"
+	db.dbName = "devops"
+	db.port = 5432
 	testDB(db, db.dbName, t)
 }
 
@@ -59,6 +80,7 @@ func testDB(pRDBMS RDBMS, pDatabase string, t *testing.T) {
 	dbHandler, err := pRDBMS.NewConnection()
 	if err != nil {
 		t.Error("could not connect: ", err)
+		return
 	}
 	defer dbHandler.Close()
 
@@ -68,34 +90,43 @@ func testDB(pRDBMS RDBMS, pDatabase string, t *testing.T) {
 	err = pRDBMS.NewTable(dbHandler, *ddlUsers())
 	if err != nil {
 		t.Error("createTable: ", err)
+		return
 	}
-
 	err = pRDBMS.TableExists(dbHandler, pDatabase, ddlUsers().Name)
 	if err != nil {
 		t.Error("table "+ddlUsers().Name+" not created: ", err)
+		return
 	}
-
 	err = pRDBMS.NewTable(dbHandler, *ddlRoles())
 	if err != nil {
 		t.Error("createTable: ", err)
+		return
 	}
-
 	err = pRDBMS.TableExists(dbHandler, pDatabase, ddlRoles().Name)
 	if err != nil {
 		t.Error("table "+ddlRoles().Name+" not created: ", err)
+		return
 	}
-
 	// Testing Row Insert
 	var i1 RowData
 	i1.TableName = ddlUsers().Name
-	i1.ColumnNames = "first_name, last_name, password, role, enabled"
+	for k, v := range ddlUsers().TableFields {
+		switch k {
+		case 0:
+			continue
+		case 1:
+			i1.ColumnNames = v.Name
+		default:
+			i1.ColumnNames = i1.ColumnNames + "," + v.Name
+		}
+	}
 	i1.Values = []string{"john", "smith", "123", "1", "Y"}
 
 	err = pRDBMS.InsertRow(dbHandler, &i1)
 	if err != nil {
-		t.Error("insert row into "+ddlUsers().Name+" dit not work: ", err)
+		t.Error("insert row into "+ddlUsers().Name+" did not work: ", err)
+		return
 	}
-
 	// Testing Bulk Insert
 	var i2 BulkValues
 	i2.TableName = ddlRoles().Name
@@ -107,12 +138,13 @@ func testDB(pRDBMS RDBMS, pDatabase string, t *testing.T) {
 	err = pRDBMS.InsertBulk(dbHandler, &i2)
 	if err != nil {
 		t.Error("insert bulk into "+ddlRoles().Name+" dit not work: ", err)
+		return
 	}
-
 	// Testing Query
 	rows, err := pRDBMS.Query(dbHandler, "select * from users where id=1")
 	if err != nil {
 		t.Error("Query error")
+		return
 	}
 	log.Println("Columns: ", rows.ColumnNames)
 	rowData := rows.Data[0]
@@ -135,8 +167,8 @@ func ddlUsers() *TableDDL {
 	t.TableFields = append(t.TableFields, ColumnDef{Name: "id", Type: "integer", PrimaryKey: true})
 	t.TableFields = append(t.TableFields, ColumnDef{Name: "first_name", Type: "text", PrimaryKey: false, NotNull: true})
 	t.TableFields = append(t.TableFields, ColumnDef{Name: "last_name", Type: "text", PrimaryKey: false, NotNull: true})
-	t.TableFields = append(t.TableFields, ColumnDef{Name: "password", Type: "text", PrimaryKey: false, NotNull: true})
-	t.TableFields = append(t.TableFields, ColumnDef{Name: "role", Type: "integer", PrimaryKey: false, NotNull: true})
+	t.TableFields = append(t.TableFields, ColumnDef{Name: "pass", Type: "text", PrimaryKey: false, NotNull: true})
+	t.TableFields = append(t.TableFields, ColumnDef{Name: "rolebased", Type: "integer", PrimaryKey: false, NotNull: true})
 	t.TableFields = append(t.TableFields, ColumnDef{Name: "enabled", Type: "text", PrimaryKey: false, NotNull: true})
 	return &t
 }

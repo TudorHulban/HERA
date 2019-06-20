@@ -2,7 +2,9 @@ package hera
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"sync"
 
@@ -11,6 +13,7 @@ import (
 
 var onceDBPg sync.Once
 
+// DBPostgresInfo - connection details for PostgreSQL type of connections
 type DBPostgresInfo struct {
 	ip       string
 	port     uint
@@ -19,6 +22,7 @@ type DBPostgresInfo struct {
 	dbName   string
 }
 
+// NewConnection - singleton, only one connection per DB
 func (r DBPostgresInfo) NewConnection() (*sql.DB, error) {
 	instance := new(sql.DB)
 	var err error
@@ -30,32 +34,106 @@ func (r DBPostgresInfo) NewConnection() (*sql.DB, error) {
 	return instance, err
 }
 
-func (r DBPostgresInfo) TableExists(pDB *sql.DB, pDatabase, pTable string) bool {
-	var occurences bool
+// NewTable - Primary Key field is auto incremented
+func (r DBPostgresInfo) NewTable(pDB *sql.DB, pDDL TableDDL) error {
+	var fieldDDL string
+	var columnDDL = func(pDDL ColumnDef) string {
+		var notnull, ddl string
 
-	theDML := "SELECT exists (select 1 from information_schema.tables WHERE table_schema='public' AND table_name=" + "'" + pTable + "'" + ")"
-	_ = pDB.QueryRow(theDML).Scan(&occurences)
-
-	return occurences
-}
-
-func (r DBPostgresInfo) CreateTable(pDB *sql.DB, pDatabase, pTableName, pDDL string, pColumnPKAutoincrement int) (bool, error) {
-	theDDL := pDDL
-
-	if pColumnPKAutoincrement > 0 {
-		theDDL = "\"id\" serial," + pDDL
+		if pDDL.NotNull {
+			notnull = " " + "not null"
+		}
+		if pDDL.PrimaryKey {
+			if pDDL.Type == "integer" {
+				ddl = pDDL.Name + " " + "SERIAL PRIMARY KEY"
+			} else {
+				ddl = pDDL.Name + " " + "PRIMARY KEY"
+			}
+		} else {
+			ddl = pDDL.Name + " " + pDDL.Type + notnull
+		}
+		return ddl
 	}
-	theDDL = "CREATE TABLE " + pTableName + "(" + theDDL + ")"
-	_, err := pDB.Exec(theDDL)
-	if err != nil {
-		return false, err
+
+	for k, v := range pDDL.TableFields {
+		if k == 0 {
+			fieldDDL = columnDDL(v)
+		} else {
+			fieldDDL = fieldDDL + "," + columnDDL(v)
+		}
 	}
-	return r.TableExists(pDB, pDatabase, pTableName), nil
-}
+	ddl := "create table " + pDDL.Name + "(" + fieldDDL + ")"
+	log.Println("DDL: ", ddl)
 
-func (r DBPostgresInfo) SingleInsert(pDB *sql.DB, pTableName string, pValues []string) error {
-	theDDL := "insert into " + pTableName + " values(" + "\"" + strings.Join(pValues, "\""+","+"\"") + "\"" + ")"
-	_, err := pDB.Exec(theDDL)
-
+	_, err := pDB.Exec(ddl)
 	return err
+}
+
+// TableExists - returns nil if table exists
+func (r DBPostgresInfo) TableExists(pDB *sql.DB, pDatabase, pTableName string) error {
+	var occurences bool
+	theDML := "SELECT exists (select 1 from information_schema.tables WHERE table_schema='public' AND table_name=" + "'" + pTableName + "'" + ")"
+	log.Println("PostgreSQL, checking if table exists: ", theDML)
+
+	err := pDB.QueryRow(theDML).Scan(&occurences)
+	if err != nil {
+		return err
+	}
+	if occurences {
+		return nil
+	}
+	return errors.New("Table " + pTableName + " does not exist in " + pDatabase)
+}
+
+// InsertRow - single row only
+func (r DBPostgresInfo) InsertRow(pDB *sql.DB, pValues *RowData) error {
+	theDDL := "insert into " + pValues.TableName + "(" + pValues.ColumnNames + ")" + " values(" + "\"" + strings.Join(pValues.Values, "\""+","+"\"") + "\"" + ")"
+	log.Println(theDDL)
+	_, err := pDB.Exec(theDDL)
+	return err
+}
+
+// InsertBulk - insert for multiple rows
+func (r DBPostgresInfo) InsertBulk(pDB *sql.DB, pBulk *BulkValues) error {
+	theQuestionMarks := returnNoValues(pBulk.Values[0], "?")
+
+	dbTransaction, err := pDB.Begin() // DB Transaction Start
+	if err != nil {
+		dbTransaction.Rollback()
+		return err
+	}
+	statement := "insert into " + pBulk.TableName + "(" + pBulk.ColumnNames + ")" + " values " + theQuestionMarks
+	log.Println("insert bulk statement: ", statement)
+	dml, err := dbTransaction.Prepare(statement)
+	if err != nil {
+		dbTransaction.Rollback()
+		return err
+	}
+	defer dml.Close()
+
+	for _, columnValues := range pBulk.Values {
+		log.Println(SliceToInterface(columnValues)...)
+		_, err := dml.Exec(SliceToInterface(columnValues)...)
+		if err != nil {
+			dbTransaction.Rollback()
+			return err
+		}
+	}
+	dbTransaction.Commit() // DB Transaction End
+	return nil
+}
+
+// Query - returns data as slice of slice of interface{}
+func (r DBPostgresInfo) Query(pDB *sql.DB, pSQL string) (*TableData, error) {
+	tableData := new(TableData)
+
+	rows, err := pDB.Query(pSQL)
+	if err != nil {
+		return nil, err
+	}
+	tableData, err = RowsToSlice(rows)
+	if err != nil {
+		return nil, err
+	}
+	return tableData, nil
 }
