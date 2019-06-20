@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"reflect"
+	"strconv"
 
 	"strings"
 )
@@ -71,10 +72,17 @@ func prepareDBFields(pFields string) string {
 	return strings.Replace(pFields, "'", "\"", -1)
 }
 
-func returnNoValues(pSlice []string, pCharToReturn string) string {
+func returnNoValues(pSlice []string, pCharToReturn string, pWithNumber bool) string {
 	var toReturn string
-	for _ = range pSlice {
-		toReturn = toReturn + pCharToReturn + ","
+
+	if pWithNumber {
+		for k := range pSlice {
+			toReturn = toReturn + pCharToReturn + strconv.Itoa(k+1) + ","
+		}
+	} else {
+		for _ = range pSlice {
+			toReturn = toReturn + pCharToReturn + ","
+		}
 	}
 	return "(" + toReturn[0:len(toReturn)-1] + ")"
 }
@@ -83,8 +91,8 @@ func wrapSliceValuesx(pSlice []string, pCharToWrap string) string {
 	return "(" + pCharToWrap + strings.Join(pSlice, pCharToWrap+","+pCharToWrap) + pCharToWrap + ")"
 }
 
-func sliceToInterface(slice interface{}) []interface{} {
-	s := reflect.ValueOf(slice)
+func sliceToInterface(pSlice interface{}) []interface{} {
+	s := reflect.ValueOf(pSlice)
 
 	if s.Kind() != reflect.Slice {
 		panic("InterfaceSlice() given a non-slice type")

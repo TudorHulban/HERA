@@ -150,8 +150,13 @@ func showQryResults(pDB *sql.DB, pRDBMS RDBMS, pQuery string, t *testing.T) erro
 		t.Error("Query error")
 		return err
 	}
+	if len(rows.Data) == 0 {
+		t.Error("No rows returned by : ", pQuery)
+		return nil
+	}
 	log.Println("Columns: ", rows.ColumnNames)
 	rowData := rows.Data[0]
+	log.Println("row data for: ", pQuery, "|", rowData)
 
 	for k, v := range rowData {
 		rowVal := *v.(*interface{})

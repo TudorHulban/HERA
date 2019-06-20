@@ -50,4 +50,6 @@ insert into roles(code, description, enabled) values("ADMIN", "Full rights", "Y"
 insert into roles(code, description, enabled) values("USER", "Some rights", "Y");
 insert into roles(code, description, enabled) values("GUEST", "Few rights", "Y");
 ```
-
+```html
+https://www.acloudtree.com/how-to-shove-data-into-postgres-using-goroutinesgophers-and-golang/
+```

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	pq "github.com/lib/pq" // imported for Postgres DB
+	_ "github.com/lib/pq" // imported for Postgres DB
 )
 
 var onceDBPg sync.Once
@@ -95,48 +95,32 @@ func (r DBPostgresInfo) InsertRow(pDB *sql.DB, pValues *RowData) error {
 
 // InsertBulk - insert for multiple rows
 func (r DBPostgresInfo) InsertBulk(pDB *sql.DB, pBulk *BulkValues) error {
-	//theQuestionMarks := returnNoValues(pBulk.Values[0], "'?'")
+	theDollarMarks := returnNoValues(pBulk.Values[0], "$", true)
 
 	dbTransaction, err := pDB.Begin() // DB Transaction Start
 	if err != nil {
 		dbTransaction.Rollback()
 		return err
 	}
-	preparedStatem, err := dbTransaction.Prepare(pq.CopyIn(pBulk.TableName, "code", "description", "enabled"))
+	statement := "insert into " + pBulk.TableName + "(" + pBulk.ColumnNames + ")" + " values " + theDollarMarks
+	log.Println("insert bulk statement: ", statement)
+
+	preparedStatem, err := dbTransaction.Prepare(statement)
 	if err != nil {
+		log.Println("------------------------ Rollback Prepare")
 		dbTransaction.Rollback()
 		return err
 	}
-	//statement := "insert into " + pBulk.TableName + "(" + pBulk.ColumnNames + ")" + " values " + theQuestionMarks
-	log.Println("insert bulk statement: ", preparedStatem)
-	/*
-		dml, err := dbTransaction.Prepare(statement)
-		if err != nil {
-			log.Println("------------------------ Rollback Prepare")
-			dbTransaction.Rollback()
-			return err
-		}
-	*/
+	defer preparedStatem.Close()
 
-	for k, columnValues := range pBulk.Values {
-		log.Println(k)
-		rowValues := sliceToInterface(columnValues)
-		stringValues := []string{}
-		for _, v := range rowValues {
-			stringValues = append(stringValues, "'"+v.(string)+"'")
-		}
-		log.Println(strings.Join(stringValues, ","))
-		result, err := preparedStatem.Exec(strings.Join(stringValues, ","))
+	for _, columnValues := range pBulk.Values {
+		log.Println(sliceToInterface(columnValues)...)
+		_, err := preparedStatem.Exec(sliceToInterface(columnValues)...)
 		if err != nil {
-			log.Println(result)
-			log.Println("------------------------ Rollback Transaction")
 			dbTransaction.Rollback()
 			return err
 		}
 	}
-	log.Println("------------------------ Exit")
-	preparedStatem.Exec()
-	preparedStatem.Close()
 	dbTransaction.Commit() // DB Transaction End
 	return nil
 }

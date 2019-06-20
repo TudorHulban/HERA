@@ -16,6 +16,7 @@ type DBSQLiteInfo struct {
 	DBFile string //holds SQLIte DB File
 }
 
+// NewConnection - lazy open db, does not truly open until first request
 func (r DBSQLiteInfo) NewConnection() (*sql.DB, error) {
 	instance := new(sql.DB)
 	var err error
@@ -76,8 +77,7 @@ func (r DBSQLiteInfo) InsertRow(pDB *sql.DB, pValues *RowData) error {
 }
 
 func (r DBSQLiteInfo) InsertBulk(pDB *sql.DB, pBulk *BulkValues) error {
-
-	theQuestionMarks := returnNoValues(pBulk.Values[0], "?")
+	theQuestionMarks := returnNoValues(pBulk.Values[0], "?", false)
 
 	dbTransaction, err := pDB.Begin() // DB Transaction Start
 	if err != nil {

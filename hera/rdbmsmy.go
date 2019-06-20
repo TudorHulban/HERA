@@ -88,14 +88,13 @@ func (r DBMariaInfo) InsertRow(pDB *sql.DB, pValues *RowData) error {
 
 // InsertBulk - insert for multiple rows
 func (r DBMariaInfo) InsertBulk(pDB *sql.DB, pBulk *BulkValues) error {
-	theQuestionMarks := returnNoValues(pBulk.Values[0], "?")
+	theQuestionMarks := returnNoValues(pBulk.Values[0], "?", false)
 
 	dbTransaction, err := pDB.Begin() // DB Transaction Start
 	if err != nil {
 		dbTransaction.Rollback()
 		return err
 	}
-
 	statement := "insert into " + pBulk.TableName + "(" + pBulk.ColumnNames + ")" + " values " + theQuestionMarks
 	log.Println("insert bulk statement: ", statement)
 	dml, err := dbTransaction.Prepare(statement)
