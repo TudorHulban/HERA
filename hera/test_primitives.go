@@ -2,79 +2,9 @@ package hera
 
 import (
 	"database/sql"
-	"errors"
 	"log"
-
-	"os"
 	"testing"
 )
-
-func cleanTable(pDB *sql.DB, pRDBMS RDBMS, pDatabase, pTableName string) error {
-	err := pRDBMS.TableExists(pDB, pDatabase, pTableName)
-	if err != nil {
-		log.Println(pDatabase + " does NOT contains " + pTableName)
-		return err
-	}
-	log.Println(pDatabase + " contains " + pTableName)
-
-	err = dropTable(pDB, pTableName)
-	if err != nil {
-		log.Println("cannot drop table in " + pDatabase + " named " + pTableName)
-		return errors.New("drop table: " + err.Error())
-	}
-	log.Println("dropped in " + pDatabase + " table named " + pTableName)
-	return nil
-}
-
-func dropTable(pDB *sql.DB, pTableName string) error {
-	_, err := pDB.Exec("drop table " + pTableName)
-	if err != nil {
-		errors.New("Table not dropped")
-	}
-	return err
-}
-
-func TestSQLite1(t *testing.T) {
-	var db DBSQLiteInfo
-	db.DBFile = "lite01.dbf"
-	//testDB(db, "", t)
-
-	err := os.Remove(db.DBFile)
-	if err != nil {
-		t.Error("Database file not removed")
-	}
-}
-
-func TestSQLite2(t *testing.T) {
-	var db DBSQLiteInfo
-	db.DBFile = "lite02.dbf"
-	//testDB(db, "", t)
-
-	err := os.Remove(db.DBFile)
-	if err != nil {
-		t.Error("Database file not removed")
-	}
-}
-
-func TestMaria(t *testing.T) {
-	var db DBMariaInfo
-	db.ip = "192.168.1.13"
-	db.user = "develop"
-	db.password = "develop"
-	db.dbName = "devops"
-	db.port = 3306
-	//testDB(db, db.dbName, t)
-}
-
-func TestPostgres(t *testing.T) {
-	var db DBPostgresInfo
-	db.ip = "192.168.1.15"
-	db.user = "develop"
-	db.password = "develop"
-	db.dbName = "devops"
-	db.port = 5432
-	testDB(db, db.dbName, t)
-}
 
 func testDB(pRDBMS RDBMS, pDatabase string, t *testing.T) {
 	dbHandler, err := pRDBMS.NewConnection()

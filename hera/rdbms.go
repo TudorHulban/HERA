@@ -2,10 +2,10 @@ package hera
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"reflect"
 	"strconv"
-
 	"strings"
 )
 
@@ -68,10 +68,38 @@ type TableData struct {
 	Data        [][]interface{}
 }
 
+// prepareDBFields - switches from single apostrophe used in SQL to double quotes as used in Go
 func prepareDBFields(pFields string) string {
 	return strings.Replace(pFields, "'", "\"", -1)
 }
 
+// cleanTable - drop table if exists
+func cleanTable(pDB *sql.DB, pRDBMS RDBMS, pDatabase, pTableName string) error {
+	err := pRDBMS.TableExists(pDB, pDatabase, pTableName)
+	if err != nil {
+		log.Println(pDatabase + " does NOT contains " + pTableName)
+		return err
+	}
+	log.Println(pDatabase + " contains " + pTableName)
+
+	err = dropTable(pDB, pTableName)
+	if err != nil {
+		log.Println("cannot drop table in " + pDatabase + " named " + pTableName)
+		return errors.New("drop table: " + err.Error())
+	}
+	log.Println("dropped in " + pDatabase + " table named " + pTableName)
+	return nil
+}
+
+func dropTable(pDB *sql.DB, pTableName string) error {
+	_, err := pDB.Exec("drop table " + pTableName)
+	if err != nil {
+		errors.New("table not dropped")
+	}
+	return err
+}
+
+// returnNoValues - returns parametrized symbols for inserts
 func returnNoValues(pSlice []string, pCharToReturn string, pWithNumber bool) string {
 	var toReturn string
 
@@ -87,10 +115,12 @@ func returnNoValues(pSlice []string, pCharToReturn string, pWithNumber bool) str
 	return "(" + toReturn[0:len(toReturn)-1] + ")"
 }
 
+// wrapSliceValuesx -
 func wrapSliceValuesx(pSlice []string, pCharToWrap string) string {
 	return "(" + pCharToWrap + strings.Join(pSlice, pCharToWrap+","+pCharToWrap) + pCharToWrap + ")"
 }
 
+// sliceToInterface - transforms unknown into slice of unknown
 func sliceToInterface(pSlice interface{}) []interface{} {
 	s := reflect.ValueOf(pSlice)
 
