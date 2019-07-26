@@ -8,7 +8,7 @@ import (
 func TestSQLite1(t *testing.T) {
 	var db DBSQLiteInfo
 	db.DBFile = "lite01.dbf"
-	//testDB(db, "", t)
+	testDB(db, "", t)
 
 	err := os.Remove(db.DBFile)
 	if err != nil {
@@ -19,7 +19,7 @@ func TestSQLite1(t *testing.T) {
 func TestSQLite2(t *testing.T) {
 	var db DBSQLiteInfo
 	db.DBFile = "lite02.dbf"
-	//testDB(db, "", t)
+	testDB(db, "", t)
 
 	err := os.Remove(db.DBFile)
 	if err != nil {
