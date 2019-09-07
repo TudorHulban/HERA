@@ -1,3 +1,7 @@
+/*
+Entry point to a db connection is the connection manager.
+Connection is *sql.DB.
+*/
 package hera
 
 import (
@@ -16,40 +20,47 @@ type DBConnManager struct {
 	Connections map[string]*DBConnection
 }
 
-// newManager - constructor for db manager
-func newManager() *DBConnManager {
+// NewDBConnManager - constructor for db manager
+func NewDBConnManager() *DBConnManager {
 	instance := new(DBConnManager)
-	instance.Connections = make(map[string]*DBConnection)
+	instance.Connections = make(map[string]*DBConnection, 0)
 	return instance
 }
 
-// addConnection - persists connection till inactive
-func (m *DBConnManager) addConnection(pID string, pRDBMS RDBMS) error {
-	if _, exists := m.Connections[pID]; exists {
+// AddConnection - persists connection till inactive
+func (m *DBConnManager) AddConnection(pCODE string, pRDBMS RDBMS) error {
+	_, exists := m.Connections[pCODE]
+	if exists {
 		return errors.New("handler exists")
 	}
 	handler, errNewHandler := pRDBMS.NewConnection()
 	if errNewHandler != nil {
 		return errNewHandler
 	}
-	m.Connections[pID].DBHandler = handler
-	m.Connections[pID].Active = true
+	m.Connections[pCODE].DBHandler = handler
+	m.Connections[pCODE].Active = true
 	return nil
 }
 
-// deleteConnection - delete connction when issues
-func (m *DBConnManager) deleteConnection(pID string) error {
-	if _, exists := m.Connections[pID]; !exists {
+// DeleteConnection - delete connction when issues, connection inactive for some time
+func (m *DBConnManager) DeleteConnection(pCODE string) error {
+	_, exists := m.Connections[pCODE]
+	if !exists {
 		return errors.New("connection does not exist")
 	}
-	delete(m.Connections, pID)
+	delete(m.Connections, pCODE)
 	return nil
 }
 
-// requestConnection - provides connection handler based on connection ID
-func (m *DBConnManager) requestConnection(pID string) (*sql.DB, error) {
-	if _, exists := m.Connections[pID]; !exists {
+// RequestConnection - provides connection handler based on connection CODE
+func (m *DBConnManager) RequestConnection(pCODE string) (*sql.DB, error) {
+	_, exists := m.Connections[pCODE]
+	if !exists {
 		return nil, errors.New("connection does not exist")
 	}
-	return m.Connections[pID].DBHandler, nil
+	if m.Connections[pCODE].Active == false {
+		m.DeleteConnection(pCODE)
+		return nil, errors.New("connection does not exist")
+	}
+	return m.Connections[pCODE].DBHandler, nil
 }
