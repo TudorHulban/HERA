@@ -23,7 +23,7 @@ type DBConnManager struct {
 // NewDBConnManager - constructor for db manager
 func NewDBConnManager() *DBConnManager {
 	instance := new(DBConnManager)
-	instance.Connections = make(map[string]*DBConnection, 0)
+	instance.Connections = make(map[string]*DBConnection)
 	return instance
 }
 
@@ -58,7 +58,7 @@ func (m *DBConnManager) RequestConnection(pCODE string) (*sql.DB, error) {
 	if !exists {
 		return nil, errors.New("connection does not exist")
 	}
-	if m.Connections[pCODE].Active == false {
+	if !m.Connections[pCODE].Active {
 		m.DeleteConnection(pCODE)
 		return nil, errors.New("connection does not exist")
 	}

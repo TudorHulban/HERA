@@ -86,13 +86,12 @@ func (r DBSQLiteInfo) InsertBulk(pDB *sql.DB, pBulk *BulkValues) error {
 	}
 
 	statement := "insert into " + pBulk.TableName + "(" + pBulk.ColumnNames + ")" + " values " + theQuestionMarks
-	dml, err := dbTransaction.Prepare(statement)
-	defer dml.Close()
-
-	if err != nil {
+	dml, errPrepare := dbTransaction.Prepare(statement)
+	if errPrepare != nil {
 		dbTransaction.Rollback()
-		return err
+		return errPrepare
 	}
+	defer dml.Close()
 
 	for _, columnValues := range pBulk.Values {
 		_, err := dml.Exec(sliceToInterface(columnValues)...)

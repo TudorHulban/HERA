@@ -94,7 +94,7 @@ func cleanTable(pDB *sql.DB, pRDBMS RDBMS, pDatabase, pTableName string) error {
 func dropTable(pDB *sql.DB, pTableName string) error {
 	_, err := pDB.Exec("drop table " + pTableName)
 	if err != nil {
-		errors.New("table not dropped")
+		return errors.New("table not dropped: " + err.Error())
 	}
 	return err
 }
@@ -108,7 +108,7 @@ func returnNoValues(pSlice []string, pCharToReturn string, pWithNumber bool) str
 			toReturn = toReturn + pCharToReturn + strconv.Itoa(k+1) + ","
 		}
 	} else {
-		for _ = range pSlice {
+		for range pSlice {
 			toReturn = toReturn + pCharToReturn + ","
 		}
 	}
@@ -143,14 +143,14 @@ func RowsToSlice(pRows *sql.Rows) (*TableData, error) {
 	for pRows.Next() {
 		columns := make([]interface{}, len(d.ColumnNames))
 		columnPointers := make([]interface{}, len(d.ColumnNames))
-		for i, _ := range columns {
+
+		for i := range columns {
 			columnPointers[i] = &columns[i]
 		}
-
-		err := pRows.Scan(columnPointers...)
-		if err != nil {
-			log.Println("scan: ", err)
-			return nil, err
+		errScan := pRows.Scan(columnPointers...)
+		if errScan != nil {
+			log.Println("scan: ", errScan)
+			return nil, errScan
 		}
 		d.Data = append(d.Data, columnPointers)
 	}
