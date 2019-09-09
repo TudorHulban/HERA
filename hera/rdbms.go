@@ -75,10 +75,11 @@ type TableData struct {
 	Data        [][]interface{}
 }
 
-// prepareDBFields - switches from single apostrophe used in SQL to double quotes as used in Go
+/*
 func prepareDBFields(pFields string) string {
-	return strings.Replace(pFields, "'", "\"", -1)
+	return strings.Replace(pFields, "'", "\"", -1) // prepareDBFields - switches from single apostrophe used in SQL to double quotes as used in Go
 }
+*/
 
 // cleanTable - drop table if exists
 func cleanTable(pDB *sql.DB, pRDBMS RDBMS, pDatabase, pTableName string) error {
@@ -122,10 +123,11 @@ func returnNoValues(pSlice []string, pCharToReturn string, pWithNumber bool) str
 	return "(" + toReturn[0:len(toReturn)-1] + ")"
 }
 
-// wrapSliceValuesx -
+/*
 func wrapSliceValuesx(pSlice []string, pCharToWrap string) string {
 	return "(" + pCharToWrap + strings.Join(pSlice, pCharToWrap+","+pCharToWrap) + pCharToWrap + ")"
 }
+*/
 
 // sliceToInterface - transforms unknown into slice of unknown
 func sliceToInterface(pSlice interface{}) []interface{} {

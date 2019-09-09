@@ -2,13 +2,13 @@ package hera
 
 import (
 	"database/sql"
-	"errors"
 	"log"
 	"strconv"
 	"strings"
 	"sync"
 
 	_ "github.com/go-sql-driver/mysql" // imported for Maria DB
+	"github.com/pkg/errors"
 )
 
 var onceDBMaria sync.Once
@@ -90,26 +90,26 @@ func (r DBMariaInfo) InsertRow(pDB *sql.DB, pValues *RowData) error {
 func (r DBMariaInfo) InsertBulk(pDB *sql.DB, pBulk *BulkValues) error {
 	theQuestionMarks := returnNoValues(pBulk.Values[0], "?", false)
 
-	dbTransaction, err := pDB.Begin() // DB Transaction Start
-	if err != nil {
-		dbTransaction.Rollback()
-		return err
+	dbTransaction, errBegin := pDB.Begin() // DB Transaction Start
+	if errBegin != nil {
+		errRollBack := dbTransaction.Rollback()
+		return errors.Wrap(errBegin, errRollBack.Error())
 	}
 	statement := "insert into " + pBulk.TableName + "(" + pBulk.ColumnNames + ")" + " values " + theQuestionMarks
 	log.Println("insert bulk statement: ", statement)
-	dml, err := dbTransaction.Prepare(statement)
-	if err != nil {
-		dbTransaction.Rollback()
-		return err
+	dml, errPrepare := dbTransaction.Prepare(statement)
+	if errPrepare != nil {
+		errRollBack := dbTransaction.Rollback()
+		return errors.Wrap(errPrepare, errRollBack.Error())
 	}
 	defer dml.Close()
 
 	for _, columnValues := range pBulk.Values {
 		log.Println(sliceToInterface(columnValues)...)
-		_, err := dml.Exec(sliceToInterface(columnValues)...)
-		if err != nil {
-			dbTransaction.Rollback()
-			return err
+		_, errExec := dml.Exec(sliceToInterface(columnValues)...)
+		if errExec != nil {
+			errRollBack := dbTransaction.Rollback()
+			return errors.Wrap(errExec, errRollBack.Error())
 		}
 	}
 	return dbTransaction.Commit() // DB Transaction End
