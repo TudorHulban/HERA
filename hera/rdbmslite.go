@@ -2,12 +2,12 @@ package hera
 
 import (
 	"database/sql"
-	"errors"
 	"log"
 	"strings"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3" // importing sqlite driver
+	"github.com/pkg/errors"
 )
 
 var onceDBSQLite sync.Once
@@ -83,26 +83,26 @@ func (r DBSQLiteInfo) InsertRow(pDB *sql.DB, pValues *RowData) error {
 func (r DBSQLiteInfo) InsertBulk(pDB *sql.DB, pBulk *BulkValues) error {
 	theQuestionMarks := returnNoValues(pBulk.Values[0], "?", false)
 
-	dbTransaction, err := pDB.Begin() // DB Transaction Start
-	if err != nil {
-		dbTransaction.Rollback()
-		return err
+	dbTransaction, errBeginTx := pDB.Begin() // DB Transaction Start
+	if errBeginTx != nil {
+		errRollBack := dbTransaction.Rollback()
+		return errors.Wrap(errBeginTx, errRollBack.Error())
 	}
 
 	statement := "insert into " + pBulk.TableName + "(" + pBulk.ColumnNames + ")" + " values " + theQuestionMarks
 	dml, errPrepare := dbTransaction.Prepare(statement)
 	if errPrepare != nil {
-		dbTransaction.Rollback()
-		return errPrepare
+		errRollBack := dbTransaction.Rollback()
+		return errors.Wrap(errPrepare, errRollBack.Error())
 	}
 	defer dml.Close()
 
 	for _, columnValues := range pBulk.Values {
-		_, err := dml.Exec(sliceToInterface(columnValues)...)
+		_, errDML := dml.Exec(sliceToInterface(columnValues)...)
 
-		if err != nil {
-			dbTransaction.Rollback()
-			return err
+		if errDML != nil {
+			errRollBack := dbTransaction.Rollback()
+			return errors.Wrap(errDML, errRollBack.Error())
 		}
 	}
 	dbTransaction.Commit() // DB Transaction End
