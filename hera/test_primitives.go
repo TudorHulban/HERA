@@ -14,8 +14,8 @@ func testDB(pRDBMS RDBMS, pDatabase string, t *testing.T) {
 	}
 	defer dbHandler.Close()
 
-	cleanTable(dbHandler, pRDBMS, pDatabase, ddlUsers().Name)
-	cleanTable(dbHandler, pRDBMS, pDatabase, ddlRoles().Name)
+	log.Println("cleanTable", cleanTable(dbHandler, pRDBMS, pDatabase, ddlUsers().Name))
+	log.Println("cleanTable", cleanTable(dbHandler, pRDBMS, pDatabase, ddlRoles().Name))
 
 	err = pRDBMS.NewTable(dbHandler, *ddlUsers())
 	if err != nil {
@@ -70,8 +70,8 @@ func testDB(pRDBMS RDBMS, pDatabase string, t *testing.T) {
 		t.Error("insert bulk into "+ddlRoles().Name+" did not work: ", err)
 		return
 	}
-	showQryResults(dbHandler, pRDBMS, "select * from users where id=1", t) // Testing Query - Single Insert
-	showQryResults(dbHandler, pRDBMS, "select * from roles", t)            // Testing Query - Bulk Insert
+	log.Println(showQryResults(dbHandler, pRDBMS, "select * from users where id=1", t)) // Testing Query - Single Insert
+	log.Println(showQryResults(dbHandler, pRDBMS, "select * from roles", t))            // Testing Query - Bulk Insert
 }
 
 func showQryResults(pDB *sql.DB, pRDBMS RDBMS, pQuery string, t *testing.T) error {

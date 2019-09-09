@@ -105,8 +105,7 @@ func (r DBSQLiteInfo) InsertBulk(pDB *sql.DB, pBulk *BulkValues) error {
 			return errors.Wrap(errDML, errRollBack.Error())
 		}
 	}
-	dbTransaction.Commit() // DB Transaction End
-	return nil
+	return dbTransaction.Commit() // DB Transaction End
 }
 
 // Query - returns data as slice of slice of interface{}
