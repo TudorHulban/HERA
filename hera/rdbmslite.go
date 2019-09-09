@@ -7,11 +7,12 @@ import (
 	"strings"
 	"sync"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3" // importing sqlite driver
 )
 
 var onceDBSQLite sync.Once
 
+// DBSQLiteInfo contains RDBMS connection info.
 type DBSQLiteInfo struct {
 	DBFile string //holds SQLIte DB File
 }
@@ -41,6 +42,7 @@ func (r DBSQLiteInfo) TableExists(pDB *sql.DB, pDatabase, pTableName string) err
 	return nil
 }
 
+// NewTable is helper for new DB table.
 func (r DBSQLiteInfo) NewTable(pDB *sql.DB, pDDL TableDDL) error {
 	var fieldDDL string
 	var columnDDL = func(pDDL ColumnDef) string {
@@ -70,12 +72,14 @@ func (r DBSQLiteInfo) NewTable(pDB *sql.DB, pDDL TableDDL) error {
 	return err
 }
 
+// InsertRow is helper for row insert.
 func (r DBSQLiteInfo) InsertRow(pDB *sql.DB, pValues *RowData) error {
 	theDDL := "insert into " + pValues.TableName + "(" + pValues.ColumnNames + ")" + " values(" + "\"" + strings.Join(pValues.Values, "\""+","+"\"") + "\"" + ")"
 	_, err := pDB.Exec(theDDL)
 	return err
 }
 
+// InsertBulk is helper for insert of multiple rows.
 func (r DBSQLiteInfo) InsertBulk(pDB *sql.DB, pBulk *BulkValues) error {
 	theQuestionMarks := returnNoValues(pBulk.Values[0], "?", false)
 

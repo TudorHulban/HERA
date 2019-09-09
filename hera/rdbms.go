@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// --------- Decouple
+// RDBMS contracts methods for easy working with various RDBMS.
 type RDBMS interface {
 	NewConnection() (*sql.DB, error)
 	NewTable(pDB *sql.DB, pDDL TableDDL) error
@@ -21,6 +21,8 @@ type RDBMS interface {
 }
 
 // --------- DDL
+
+// ColumnDef provides DDL for table column.
 type ColumnDef struct {
 	Name       string
 	Type       string
@@ -28,24 +30,27 @@ type ColumnDef struct {
 	NotNull    bool
 }
 
+// TableDDL is nutshell for database table DDL.
 type TableDDL struct {
 	Name        string
 	TableFields []ColumnDef
 }
 
+// SchemaDDL is nutshell for database schema.
 type SchemaDDL struct {
 	Tables []TableDDL
 }
 
 // ----------- INSERT
 
-// RowValues - to be used for insert single row
+// RowData is to be used for insert single row
 type RowData struct {
 	TableName   string
 	ColumnNames string
 	Values      []string
 }
 
+// BulkValues to be used when working with data from several rows from a specific table.
 type BulkValues struct {
 	TableName   string
 	ColumnNames string
@@ -58,11 +63,13 @@ type CellValue struct {
 	CellData   interface{}
 }
 
+// RowValues contains data from given row.
 type RowValues struct {
 	ColumnNames []string
 	Values      []interface{}
 }
 
+// TableData contains data from given table.
 type TableData struct {
 	ColumnNames []string
 	Data        [][]interface{}

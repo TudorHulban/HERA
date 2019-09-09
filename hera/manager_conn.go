@@ -1,4 +1,5 @@
 /*
+Package hera assists with easy RDBMS ops.
 Entry point to a db connection is the connection manager.
 Connection is *sql.DB.
 */
@@ -9,6 +10,7 @@ import (
 	"errors"
 )
 
+// DBConnection is part of db connection manager pool.
 type DBConnection struct {
 	Active    bool
 	DBHandler *sql.DB
@@ -16,6 +18,7 @@ type DBConnection struct {
 	LastStatusChange int64
 }
 
+// DBConnManager is pool of db connections.
 type DBConnManager struct {
 	Connections map[string]*DBConnection
 }
@@ -59,6 +62,7 @@ func (m *DBConnManager) RequestConnection(pCODE string) (*sql.DB, error) {
 		return nil, errors.New("connection does not exist")
 	}
 	if !m.Connections[pCODE].Active {
+
 		m.DeleteConnection(pCODE)
 		return nil, errors.New("connection does not exist")
 	}
