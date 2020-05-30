@@ -5,13 +5,14 @@ import (
 )
 
 // rowsToSlice - https://kylewbanks.com/blog/query-result-to-map-in-golang
-func rowsToSlice(rows *sql.Rows) (TableData, error) {
-	var data TableData
+// transformation independent of table name.
+func rowsToSlice(rows *sql.Rows) (RowData, error) {
+	var data RowData
 	var errColsClosed error
 
 	data.ColumnNames, errColsClosed = rows.Columns()
 	if errColsClosed != nil {
-		return TableData{}, errColsClosed
+		return RowData{}, errColsClosed
 	}
 
 	for rows.Next() {
@@ -24,10 +25,11 @@ func rowsToSlice(rows *sql.Rows) (TableData, error) {
 
 		errScan := rows.Scan(columnPointers...)
 		if errScan != nil {
-			return TableData{}, errScan
+			return RowData{}, errScan
 		}
-
-		data.Rows = append(data.Rows, columnPointers)
+		var rowValues RowValues
+		rowValues.Values = columnPointers
+		data.Data = append(data.Data, rowValues)
 	}
 	return data, nil
 }

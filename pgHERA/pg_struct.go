@@ -4,10 +4,10 @@ package pghera
 
 // ColumnDef provides DDL for table column.
 type ColumnDef struct {
-	Name       string
-	Type       string
 	PrimaryKey bool
 	NotNull    bool
+	Name       string
+	Type       string
 }
 
 // TableDDL is nutshell for database table DDL.
@@ -21,36 +21,27 @@ type SchemaDDL struct {
 	Tables []TableDDL
 }
 
-// ----------- INSERT
+// ----------- INSERT. Data contains values and names.
 
-// RowData is to be used for insert single row
-type RowData struct {
-	TableName   string
-	ColumnNames string
-	Values      []string
-}
-
-// BulkValues to be used when working with data from several rows from a specific table.
-type BulkValues struct {
-	TableName   string
-	ColumnNames string
-	Values      [][]string
-}
-
-// CellValue - for select
-type CellValue struct {
-	ColumnName string
-	CellData   interface{}
+// ColNames Type for CSV of column names.
+type TableColumnNames struct {
+	ColumnNames []string
 }
 
 // RowValues contains data from given row.
 type RowValues struct {
-	ColumnNames []string
-	Values      []interface{}
+	Values []interface{}
 }
 
-// TableData contains data from given table.
-type TableData struct {
-	ColumnNames []string
-	Rows        [][]interface{}
+// RowValues contains data from given table.
+type RowData struct {
+	TableName string
+	TableColumnNames
+	Data []RowValues
+}
+
+// CellData - for select
+type CellData struct {
+	ColumnName string
+	CellValue  interface{}
 }
