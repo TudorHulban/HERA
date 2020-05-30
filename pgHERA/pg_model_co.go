@@ -29,11 +29,11 @@ func New(db DBInfo) (Hera, error) {
 
 	dbconn, errOpen := sql.Open("postgres", dbinfo)
 	if errOpen != nil {
-		return nil, errOpen
+		return Hera{}, errOpen
 	}
 	errAlive := dbconn.Ping()
 	if errAlive != nil {
-		return nil, errAlive
+		return Hera{}, errAlive
 	}
 	return Hera{
 		DBInfo: db,
@@ -46,7 +46,7 @@ func (h Hera) TableExists(tableName string) error {
 	var occurences bool
 	theDML := "SELECT exists (select 1 from information_schema.tables WHERE table_schema='public' AND table_name=" + "'" + tableName + "'" + ")"
 
-	if errQ := pDB.QueryRow(theDML).Scan(&occurences); errQ != nil {
+	if errQ := h.DBConn.QueryRow(theDML).Scan(&occurences); errQ != nil {
 		return errQ
 	}
 	if occurences {
