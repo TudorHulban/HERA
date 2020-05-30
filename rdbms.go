@@ -6,7 +6,6 @@ import (
 	"log"
 	"reflect"
 	"strconv"
-	"strings"
 )
 
 // RDBMS contracts methods for easy working with various RDBMS.
