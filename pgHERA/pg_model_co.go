@@ -43,9 +43,9 @@ func New(db DBInfo) (Hera, error) {
 
 // TableExists - returns nil if table exists
 func (h Hera) TableExists(tableName string) error {
-	var occurences bool
 	theDML := "SELECT exists (select 1 from information_schema.tables WHERE table_schema='public' AND table_name=" + "'" + tableName + "'" + ")"
-
+	
+	var occurences bool
 	if errQ := h.DBConn.QueryRow(theDML).Scan(&occurences); errQ != nil {
 		return errQ
 	}
