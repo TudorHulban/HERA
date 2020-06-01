@@ -1,7 +1,7 @@
 package pghera
 
 import (
-	"log"
+	"errors"
 	"reflect"
 	"strings"
 
@@ -11,6 +11,8 @@ import (
 
 // Column Concentrates table column data.
 type Column struct {
+	// If primary key.
+	PK bool
 	// If not required column could be null.
 	Required   bool
 	Unique     bool
@@ -26,6 +28,7 @@ type User struct {
 	age         int    `hera:"required"`
 	isConnected bool   `hera:"default:true"`
 	comment     string `hera:"-"`
+	toSkip      interface{}
 }
 
 // getTableName Gets table name from model. Use pointer like interface{}(&Model{}).
@@ -47,15 +50,18 @@ func allowedField(fieldType string) bool {
 	return false
 }
 
-func (h Hera) getTableColumns(model interface{}) []Column {
+func (h Hera) getTableColumns(model interface{}) ([]Column, error) {
 	val := reflect.ValueOf(model).Elem()
 	h.l.Debug("val:", val)
 
+	// existsPK Signalizes if we already have a primary key field.
+	existsPK := false
 	var result []Column
+
 	for i := 0; i < val.NumField(); i++ {
 		fieldType := val.Type().Field(i).Type.String()
 		if !allowedField(fieldType) {
-			log.Println("skipping fieldType:", fieldType)
+			h.l.Warn("skipping fieldType:", fieldType)
 			continue
 		}
 
@@ -64,7 +70,9 @@ func (h Hera) getTableColumns(model interface{}) []Column {
 		}
 
 		tag := val.Type().Field(i).Tag.Get("hera")
-		log.Println("Tag:", tag)
+		h.l.Debug("Tag:", tag)
+
+		ignoreField := false
 
 		if len(tag) > 0 {
 			tags := strings.Split(tag, ",")
@@ -73,7 +81,15 @@ func (h Hera) getTableColumns(model interface{}) []Column {
 				s := strings.ToLower(strings.TrimSpace(tagS))
 
 				if s == "-" {
+					ignoreField = true
 					continue
+				}
+				if s == "pk" {
+					if existsPK {
+						return []Column{}, errors.New("more than one primary key field detected. max is 1")
+					}
+					existsPK = true
+					column.PK = true
 				}
 				if s == "unique" {
 					column.Unique = true
@@ -90,6 +106,10 @@ func (h Hera) getTableColumns(model interface{}) []Column {
 			}
 		}
 
+		if ignoreField {
+			continue
+		}
+
 		if fieldType == "string" || fieldType == "*string" {
 			column.DataType = "text"
 		}
@@ -104,5 +124,5 @@ func (h Hera) getTableColumns(model interface{}) []Column {
 		}
 		result = append(result, column)
 	}
-	return result
+	return result, nil
 }

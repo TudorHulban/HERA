@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/TudorHulban/log"
 )
@@ -39,6 +40,7 @@ func New(db DBInfo) (Hera, error) {
 	return Hera{
 		DBInfo: db,
 		DBConn: dbconn,
+		l:      log.New(3, os.Stderr),
 	}, nil
 }
 
