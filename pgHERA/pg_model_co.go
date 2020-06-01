@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
+	"github.com/TudorHulban/log"
 )
 
 // DBInfo Type concentrates information for connecting to a PostgreSQL db.
@@ -19,8 +21,7 @@ type DBInfo struct {
 type Hera struct {
 	DBInfo
 	DBConn *sql.DB
-	// l Logger for internal logging.
-	//l log.Logger
+	l      *log.LogInfo
 }
 
 // New Constructor for database connection. Preferable only one connection per DB.
@@ -44,7 +45,7 @@ func New(db DBInfo) (Hera, error) {
 // TableExists - returns nil if table exists
 func (h Hera) TableExists(tableName string) error {
 	theDML := "SELECT exists (select 1 from information_schema.tables WHERE table_schema='public' AND table_name=" + "'" + tableName + "'" + ")"
-	
+
 	var occurences bool
 	if errQ := h.DBConn.QueryRow(theDML).Scan(&occurences); errQ != nil {
 		return errQ

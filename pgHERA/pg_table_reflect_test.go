@@ -1,6 +1,7 @@
 package pghera
 
 import (
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,8 +12,16 @@ func TestGetTableName(t *testing.T) {
 }
 
 func TestGetTableColumns(t *testing.T) {
-	c := getFields(interface{}(&User{}))
+	c := getTableColumns(interface{}(&User{}))
 
-	assert.Equal(t, c[0].ColumnName, "name")
-	assert.Equal(t, c[1].ColumnName, "age")
+	assert.Equal(t, c[1].ColumnName, "name")
+	assert.Equal(t, c[2].ColumnName, "age")
+}
+
+func TestListTableColumns(t *testing.T) {
+	c := getTableColumns(interface{}(&User{}))
+
+	for k, v := range c {
+		log.Println(k, v)
+	}
 }

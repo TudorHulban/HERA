@@ -13,3 +13,9 @@ func (h Hera) Query(sql string) (RowData, error) {
 	}
 	return data, nil
 }
+
+// CreateTable Method returns data as slice of slice of interface{}.
+func (h Hera) CreateTable() error {
+
+	return nil
+}
