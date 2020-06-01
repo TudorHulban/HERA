@@ -29,7 +29,7 @@ type User struct {
 }
 
 // getTableName Gets table name from model. Use pointer like interface{}(&Model{}).
-func getTableName(model interface{}) string {
+func (h Hera) getTableName(model interface{}) string {
 	if t := reflect.TypeOf(model); t.Kind() == reflect.Ptr {
 		return inflection.Plural(strcase.ToSnake(t.Elem().Name()))
 	} else {
@@ -38,7 +38,7 @@ func getTableName(model interface{}) string {
 }
 
 func allowedField(fieldType string) bool {
-	allowedTypes := []string{"string", "int", "int64", "float64", "bool"}
+	allowedTypes := []string{"string", "*string", "int", "int64", "float64", "*float64", "bool", "*bool"}
 	for _, v := range allowedTypes {
 		if fieldType == v {
 			return true
@@ -48,15 +48,14 @@ func allowedField(fieldType string) bool {
 }
 
 func (h Hera) getTableColumns(model interface{}) []Column {
-	var result []Column
-
 	val := reflect.ValueOf(model).Elem()
 	h.l.Debug("val:", val)
 
+	var result []Column
 	for i := 0; i < val.NumField(); i++ {
 		fieldType := val.Type().Field(i).Type.String()
 		if !allowedField(fieldType) {
-			log.Println("fieldType:", fieldType)
+			log.Println("skipping fieldType:", fieldType)
 			continue
 		}
 
@@ -65,9 +64,7 @@ func (h Hera) getTableColumns(model interface{}) []Column {
 		}
 
 		tag := val.Type().Field(i).Tag.Get("hera")
-
 		log.Println("Tag:", tag)
-		ignoreField := false
 
 		if len(tag) > 0 {
 			tags := strings.Split(tag, ",")
@@ -84,20 +81,16 @@ func (h Hera) getTableColumns(model interface{}) []Column {
 				if s == "index" {
 					column.Index = true
 				}
+				if s == "required" {
+					column.Required = true
+				}
 				if strings.Contains(s, "default:") {
 					column.Default = s[8:]
 				}
-
 			}
 		}
 
-		if fieldType == "string" {
-			column.DataType = "text"
-			if column.Default == "" {
-				column.Default = "''"
-			}
-		}
-		if fieldType == "*string" {
+		if fieldType == "string" || fieldType == "*string" {
 			column.DataType = "text"
 		}
 		if fieldType == "int64" || fieldType == "int" {
@@ -105,15 +98,11 @@ func (h Hera) getTableColumns(model interface{}) []Column {
 		}
 		if fieldType == "float64" || fieldType == "*float64" {
 			column.DataType = "numeric"
-			column.Default = "0.00"
 		}
 		if fieldType == "bool" || fieldType == "*bool" {
 			column.DataType = "boolean"
-			if column.Default == "" {
-				column.Default = "false"
-			}
 		}
-		res = append(res, column)
+		result = append(result, column)
 	}
-	return res
+	return result
 }

@@ -8,14 +8,7 @@ import (
 )
 
 func TestCo(t *testing.T) {
-	info := DBInfo{
-		Port:     5432,
-		IP:       "0.0.0.0",
-		User:     "postgres",
-		Password: "pp",
-		DBName:   "postgres",
-	}
-
-	_, errCo := New(info)
+	h, errCo := New(info)
 	assert.Nil(t, errCo)
+	h.DBConn.Close()
 }
