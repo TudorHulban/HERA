@@ -22,12 +22,18 @@ type Column struct {
 	Default    string
 }
 
+type tableDefinition struct {
+	TableName  string
+	ColumnsDef []Column
+}
+
 type User struct {
-	ID          int64       `hera:"pk"`           // nolint
-	name        string      `hera:"default:xx"`   // nolint
-	age         int         `hera:"required"`     // nolint
-	isConnected bool        `hera:"default:true"` // nolint
-	comment     string      `hera:"-"`            // nolint
+	tableName   struct{}    `hera:"theTableName"`
+	ID          int64       `hera:"pk"`                           // nolint
+	name        string      `hera:"default:xx"`                   // nolint
+	age         int         `hera:"required, column-name:theage"` // nolint
+	isConnected bool        `hera:"default:true"`                 // nolint
+	comment     string      `hera:"-"`                            // nolint
 	toSkip      interface{} // nolint
 }
 
@@ -40,19 +46,28 @@ func (h Hera) getTableName(model interface{}) string {
 	}
 }
 
-func (h Hera) getTableColumns(model interface{}) ([]Column, error) {
+func (h Hera) getTableDefinition(model interface{}) (tableDefinition, error) {
 	val := reflect.ValueOf(model).Elem()
 	h.l.Debug("val:", val)
 
 	// existsPK Signalizes if we already have a primary key field.
 	existsPK := false
-	var result []Column
+	result := tableDefinition{
+		TableName:  h.getTableName(model),
+		ColumnsDef: []Column{},
+	}
 
 	for i := 0; i < val.NumField(); i++ {
 		rdbmsFieldType, exists := (*h.transTable)[val.Type().Field(i).Type.String()]
 		if !exists {
 			h.l.Warnf("skipping field number: %v", i)
 			continue
+		}
+
+		// check if definition overrides table name
+		if val.Type().Field(i).Name == "tableName" {
+			result.TableName = val.Type().Field(0).Tag.Get("hera")
+			h.l.Warnf("Overrided table name: %v", result.TableName)
 		}
 
 		column := Column{
@@ -79,7 +94,7 @@ func (h Hera) getTableColumns(model interface{}) ([]Column, error) {
 				}
 				if s == "pk" {
 					if existsPK {
-						return []Column{}, errors.New("more than one primary key field detected. max is 1")
+						return tableDefinition{}, errors.New("more than one primary key field detected. max is 1")
 					}
 					existsPK = true
 					column.PK = true
@@ -96,12 +111,15 @@ func (h Hera) getTableColumns(model interface{}) ([]Column, error) {
 				if strings.Contains(s, "default:") {
 					column.Default = s[8:]
 				}
+				if strings.Contains(s, "column-name:") {
+					column.ColumnName = s[12:]
+				}
 			}
 		}
 		if ignoreField {
 			continue
 		}
-		result = append(result, column)
+		result.ColumnsDef = append(result.ColumnsDef, column)
 	}
 	return result, nil
 }

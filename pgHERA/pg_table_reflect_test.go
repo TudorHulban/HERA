@@ -21,10 +21,10 @@ func TestGetTableColumns(t *testing.T) {
 	if assert.Nil(t, errCo) {
 		defer h.DBConn.Close()
 
-		c, errColumns := h.getTableColumns(interface{}(&User{}))
+		c, errColumns := h.getTableDefinition(interface{}(&User{}))
 		assert.Nil(t, errColumns)
-		assert.Equal(t, c[1].ColumnName, "name")
-		assert.Equal(t, c[2].ColumnName, "age")
+		assert.Equal(t, c.ColumnsDef[1].ColumnName, "name")
+		assert.Equal(t, c.ColumnsDef[2].ColumnName, "theage")
 	}
 }
 
@@ -33,9 +33,9 @@ func TestListTableColumns(t *testing.T) {
 	if assert.Nil(t, errCo) {
 		defer h.DBConn.Close()
 
-		c, errColumns := h.getTableColumns(interface{}(&User{}))
+		c, errColumns := h.getTableDefinition(interface{}(&User{}))
 		assert.Nil(t, errColumns)
-		for k, v := range c {
+		for k, v := range c.ColumnsDef {
 			log.Println(k, v)
 		}
 	}
