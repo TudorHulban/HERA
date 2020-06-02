@@ -35,8 +35,7 @@ func New(db DBInfo, logLevel int) (Hera, error) {
 	if errOpen != nil {
 		return Hera{}, errOpen
 	}
-	errAlive := dbconn.Ping()
-	if errAlive != nil {
+	if errAlive := dbconn.Ping(); errAlive != nil {
 		return Hera{}, errAlive
 	}
 	return Hera{

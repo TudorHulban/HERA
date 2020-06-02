@@ -26,15 +26,12 @@ func (h Hera) CreateTable(model interface{}) error {
 	tableDDL := strings.Join(tbDDL, " ")
 
 	// execute now the DDL
-	_, errCreate := h.DBConn.Exec(tableDDL)
-	if errCreate != nil {
+	if _, errCreate := h.DBConn.Exec(tableDDL); errCreate != nil {
 		return errCreate
 	}
 
-	indexDDL := getIndexDDL(tbDef)
-	if indexDDL != "" {
-		_, errIndex := h.DBConn.Exec(indexDDL)
-		if errIndex != nil {
+	if indexDDL := getIndexDDL(tbDef); indexDDL != "" {
+		if _, errIndex := h.DBConn.Exec(indexDDL); errIndex != nil {
 			return errIndex
 		}
 	}
