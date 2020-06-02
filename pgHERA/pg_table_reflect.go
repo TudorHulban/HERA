@@ -58,16 +58,17 @@ func (h Hera) getTableDefinition(model interface{}) (tableDefinition, error) {
 	}
 
 	for i := 0; i < val.NumField(); i++ {
+		// check if definition overrides table name
+		if val.Type().Field(i).Name == "tableName" {
+			result.TableName = val.Type().Field(i).Tag.Get("hera")
+			h.l.Warnf("Overrided table name: %v", result.TableName)
+		}
+
+		// check if field definition exists in translation table. if not skip field.
 		rdbmsFieldType, exists := (*h.transTable)[val.Type().Field(i).Type.String()]
 		if !exists {
 			h.l.Warnf("skipping field number: %v", i)
 			continue
-		}
-
-		// check if definition overrides table name
-		if val.Type().Field(i).Name == "tableName" {
-			result.TableName = val.Type().Field(0).Tag.Get("hera")
-			h.l.Warnf("Overrided table name: %v", result.TableName)
 		}
 
 		column := Column{
