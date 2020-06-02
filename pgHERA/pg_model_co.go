@@ -28,7 +28,7 @@ type Hera struct {
 }
 
 // New Constructor for database connection. Preferable only one connection per DB.
-func New(db DBInfo) (Hera, error) {
+func New(db DBInfo, logLevel int) (Hera, error) {
 	dbinfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", db.IP, db.Port, db.User, db.Password, db.DBName)
 
 	dbconn, errOpen := sql.Open("postgres", dbinfo)
@@ -43,7 +43,7 @@ func New(db DBInfo) (Hera, error) {
 		DBInfo:     db,
 		DBConn:     dbconn,
 		transTable: newTranslationTable(),
-		l:          log.New(3, os.Stderr),
+		l:          log.New(logLevel, os.Stderr),
 	}, nil
 }
 

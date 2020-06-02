@@ -14,12 +14,12 @@ type Column struct {
 	// If primary key.
 	PK bool
 	// If not required column could be null.
-	Required   bool
-	Unique     bool
-	Index      bool
-	ColumnName string
-	RDBMSType  string
-	Default    string
+	Required     bool
+	Unique       bool
+	Index        bool
+	ColumnName   string
+	RDBMSType    string
+	DefaultValue string
 }
 
 type tableDefinition struct {
@@ -60,7 +60,7 @@ func (h Hera) getTableDefinition(model interface{}) (tableDefinition, error) {
 	for i := 0; i < val.NumField(); i++ {
 		// check if definition overrides table name
 		if val.Type().Field(i).Name == "tableName" {
-			result.TableName = val.Type().Field(i).Tag.Get("hera")
+			result.TableName = strings.ToLower(val.Type().Field(i).Tag.Get("hera"))
 			h.l.Warnf("Overrided table name: %v", result.TableName)
 		}
 
@@ -110,7 +110,7 @@ func (h Hera) getTableDefinition(model interface{}) (tableDefinition, error) {
 					column.Required = true
 				}
 				if strings.Contains(s, "default:") {
-					column.Default = s[8:]
+					column.DefaultValue = s[8:]
 				}
 				if strings.Contains(s, "column-name:") {
 					column.ColumnName = s[12:]
