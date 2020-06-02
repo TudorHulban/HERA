@@ -2,6 +2,7 @@ package pghera
 
 import (
 	"database/sql"
+	"strings"
 )
 
 // rowsToSlice - https://kylewbanks.com/blog/query-result-to-map-in-golang
@@ -32,4 +33,30 @@ func rowsToSlice(rows *sql.Rows) (RowData, error) {
 		data.Data = append(data.Data, rowValues)
 	}
 	return data, nil
+}
+
+// getColumnDDL Produces column DDL based on column definition.
+func getColumnDDL(ddl Column) string {
+	result := []string{ddl.ColumnName, ddl.RDBMSType}
+
+	// checking each field in column definition
+	if ddl.PK {
+		result = append(result, "PRIMARY KEY")
+	}
+	if ddl.Unique {
+		result = append(result, "UNIQUE")
+	}
+	if ddl.Required {
+		result = append(result, "NOT NULL")
+	}
+	if ddl.DefaultValue != "" {
+		var sep string
+		if ddl.RDBMSType == "text" {
+			sep = `"`
+		}
+		result = append(result, "DEFAULT")
+		result = append(result, sep+ddl.DefaultValue+sep)
+	}
+
+	return strings.Join(result, " ")
 }
