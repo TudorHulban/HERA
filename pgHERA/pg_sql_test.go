@@ -9,6 +9,7 @@ import (
 
 func TestCo(t *testing.T) {
 	h, errCo := New(info)
-	assert.Nil(t, errCo)
-	h.DBConn.Close()
+	if assert.Nil(t, errCo) {
+		h.DBConn.Close()
+	}
 }

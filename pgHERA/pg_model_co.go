@@ -22,7 +22,9 @@ type DBInfo struct {
 type Hera struct {
 	DBInfo
 	DBConn *sql.DB
-	l      *log.LogInfo
+	// used for translating structure fields to RDBMS field types
+	transTable *translationTable
+	l          *log.LogInfo
 }
 
 // New Constructor for database connection. Preferable only one connection per DB.
@@ -38,9 +40,10 @@ func New(db DBInfo) (Hera, error) {
 		return Hera{}, errAlive
 	}
 	return Hera{
-		DBInfo: db,
-		DBConn: dbconn,
-		l:      log.New(3, os.Stderr),
+		DBInfo:     db,
+		DBConn:     dbconn,
+		transTable: newTranslationTable(),
+		l:          log.New(3, os.Stderr),
 	}, nil
 }
 
@@ -48,11 +51,11 @@ func New(db DBInfo) (Hera, error) {
 func (h Hera) TableExists(tableName string) error {
 	theDML := "SELECT exists (select 1 from information_schema.tables WHERE table_schema='public' AND table_name=" + "'" + tableName + "'" + ")"
 
-	var occurences bool
-	if errQ := h.DBConn.QueryRow(theDML).Scan(&occurences); errQ != nil {
+	var occurrences bool
+	if errQ := h.DBConn.QueryRow(theDML).Scan(&occurrences); errQ != nil {
 		return errQ
 	}
-	if occurences {
+	if occurrences {
 		return nil
 	}
 	return errors.New("table " + tableName + " does not exist in " + h.DBName)
