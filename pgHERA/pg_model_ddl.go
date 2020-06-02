@@ -24,16 +24,19 @@ func (h Hera) CreateTable(model interface{}) error {
 	tbDDL = append(tbDDL, ");")
 
 	tableDDL := strings.Join(tbDDL, " ")
-	indexDDL := getIndexDDL(tbDef)
 
 	// execute now the DDL
 	_, errCreate := h.DBConn.Exec(tableDDL)
 	if errCreate != nil {
 		return errCreate
 	}
-	_, errIndex := h.DBConn.Exec(indexDDL)
-	if errIndex != nil {
-		return errIndex
+
+	indexDDL := getIndexDDL(tbDef)
+	if indexDDL != "" {
+		_, errIndex := h.DBConn.Exec(indexDDL)
+		if errIndex != nil {
+			return errIndex
+		}
 	}
 	return nil
 }
