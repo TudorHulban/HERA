@@ -49,14 +49,26 @@ func getColumnDDL(ddl Column) string {
 	if ddl.Required {
 		result = append(result, "NOT NULL")
 	}
-	if ddl.DefaultValue != "" {
-		var sep string
-		if ddl.RDBMSType == "text" {
-			sep = `"`
-		}
+	if ddl.DefaultValue != "" && ddl.RDBMSType != "text" {
 		result = append(result, "DEFAULT")
-		result = append(result, sep+ddl.DefaultValue+sep)
+		result = append(result, ddl.DefaultValue)
 	}
 
 	return strings.Join(result, " ")
+}
+
+func getIndexDDL(tbDef tableDefinition) string {
+	var indexCols []string
+
+	for _, v := range tbDef.ColumnsDef {
+		if v.Index {
+			indexCols = append(indexCols, v.ColumnName)
+		}
+	}
+	// checking if any columns for multi column index
+	if len(indexCols) == 0 {
+		return ""
+	}
+
+	return "create index " + tbDef.TableName + "_idx" + " ON " + tbDef.TableName + " (" + strings.Join(indexCols, ",") + ");"
 }

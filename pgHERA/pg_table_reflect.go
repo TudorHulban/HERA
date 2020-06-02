@@ -29,11 +29,11 @@ type tableDefinition struct {
 
 type User struct {
 	tableName   struct{}    `hera:"theTableName"`
-	ID          int64       `hera:"pk"`                           // nolint
-	name        string      `hera:"default:xx"`                   // nolint
-	age         int         `hera:"required, column-name:theage"` // nolint
-	isConnected bool        `hera:"default:true"`                 // nolint
-	comment     string      `hera:"-"`                            // nolint
+	ID          int64       `hera:"pk"`                                  // nolint
+	name        string      `hera:"default:xx, index"`                   // nolint
+	age         int         `hera:"required, column-name:theage, index"` // nolint
+	isConnected bool        `hera:"default:true"`                        // nolint
+	comment     string      `hera:"-"`                                   // nolint
 	toSkip      interface{} // nolint
 }
 

@@ -5,10 +5,10 @@ import (
 )
 
 // CreateTable Method creates table based on model.
-func (h Hera) CreateTable(model interface{}) (string, error) {
+func (h Hera) CreateTable(model interface{}) error {
 	tbDef, errDef := h.getTableDefinition(model)
 	if errDef != nil {
-		return "", errDef
+		return errDef
 	}
 
 	tbDDL := []string{"create table", tbDef.TableName, "("}
@@ -22,5 +22,18 @@ func (h Hera) CreateTable(model interface{}) (string, error) {
 		}
 	}
 	tbDDL = append(tbDDL, ");")
-	return strings.Join(tbDDL, " "), nil
+
+	tableDDL := strings.Join(tbDDL, " ")
+	indexDDL := getIndexDDL(tbDef)
+
+	// execute now the DDL
+	_, errCreate := h.DBConn.Exec(tableDDL)
+	if errCreate != nil {
+		return errCreate
+	}
+	_, errIndex := h.DBConn.Exec(indexDDL)
+	if errIndex != nil {
+		return errIndex
+	}
+	return nil
 }
