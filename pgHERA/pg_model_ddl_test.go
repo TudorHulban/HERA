@@ -1,7 +1,6 @@
 package pghera
 
 import (
-	"log"
 	"testing"
 
 	_ "github.com/lib/pq"
@@ -13,6 +12,10 @@ func TestTableDDL(t *testing.T) {
 	if assert.Nil(t, errCo) {
 		defer h.DBConn.Close()
 
-		log.Println(h.CreateTable(interface{}(&User{})))
+		tableName, errCr := h.CreateTable(interface{}(&User{}))
+		if assert.Nil(t, errCr) {
+			errTbExists := h.TableExists(tableName)
+			assert.Nil(t, errTbExists)
+		}
 	}
 }

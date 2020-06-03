@@ -2,7 +2,6 @@ package pghera
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"os"
 
@@ -44,18 +43,4 @@ func New(db DBInfo, logLevel int) (Hera, error) {
 		transTable: newTranslationTable(),
 		l:          log.New(logLevel, os.Stderr),
 	}, nil
-}
-
-// TableExists - returns nil if table exists
-func (h Hera) TableExists(tableName string) error {
-	theDML := "SELECT exists (select 1 from information_schema.tables WHERE table_schema='public' AND table_name=" + "'" + tableName + "'" + ")"
-
-	var occurrences bool
-	if errQ := h.DBConn.QueryRow(theDML).Scan(&occurrences); errQ != nil {
-		return errQ
-	}
-	if occurrences {
-		return nil
-	}
-	return errors.New("table " + tableName + " does not exist in " + h.DBName)
 }
