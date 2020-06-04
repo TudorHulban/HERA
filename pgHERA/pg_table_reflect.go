@@ -46,6 +46,7 @@ func (h Hera) getTableName(model interface{}) string {
 	}
 }
 
+// getTableDefinition Method gets table definition for model.
 func (h Hera) getTableDefinition(model interface{}) (tableDefinition, error) {
 	val := reflect.ValueOf(model).Elem()
 	h.l.Debug("val:", val)

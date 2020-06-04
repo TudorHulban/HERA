@@ -7,6 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestTableDDL Tests if table:
+// a. created correctly
+// b. check if it exists
+// c. is dropped corectly
 func TestTableDDL(t *testing.T) {
 	h, errCo := New(info, 0)
 	if assert.Nil(t, errCo) {
@@ -18,12 +22,14 @@ func TestTableDDL(t *testing.T) {
 
 		// check if table exists already
 		if h.TableExists(tableName) == nil {
-			errDrop := h.DropTable(tableName, true)
-			assert.Nil(t, errDrop)
+			assert.Nil(t, h.DropTable(tableName, true))
 		}
 
 		// table was dropped or did not exist. create it.
 		_, errCr := h.CreateTable(interface{}(&User{}), false)
 		assert.Nil(t, errCr)
+
+		// now we are sure we drop it.
+		assert.Nil(t, h.DropTable(tableName, true))
 	}
 }
