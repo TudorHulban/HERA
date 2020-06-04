@@ -39,11 +39,19 @@ type User struct {
 
 // getTableName Gets table name from model. Use pointer like interface{}(&Model{}).
 func (h Hera) getTableName(model interface{}) string {
-	if t := reflect.TypeOf(model); t.Kind() == reflect.Ptr {
-		return inflection.Plural(strcase.ToSnake(t.Elem().Name()))
-	} else { // nolint
-		return inflection.Plural(strcase.ToSnake(t.Name()))
+	return reflectGetTableName(reflect.TypeOf(model))
+}
+
+// reflectGetTableName Helper in case the value is needed using reflection types.
+func reflectGetTableName(v reflect.Type) string {
+	if v.Kind() == reflect.Ptr {
+		return inflection.Plural(strcase.ToSnake(v.Elem().Name()))
 	}
+	return inflection.Plural(strcase.ToSnake(v.Name()))
+}
+
+func reflectGetTableDefinition(v reflect.Value) tableDefinition {
+	return tableDefinition{}
 }
 
 // getTableDefinition Method gets table definition for model.

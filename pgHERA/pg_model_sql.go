@@ -1,6 +1,6 @@
 package pghera
 
-import "fmt"
+import "reflect"
 
 // Query Method returns data as slice of slice of interface{}.
 func (h Hera) Query(sql string) (RowData, error) {
@@ -17,7 +17,11 @@ func (h Hera) Query(sql string) (RowData, error) {
 }
 func (h Hera) InsertModel(modelData interface{}) error {
 	// get model type
-	h.l.Debug("Type:", fmt.Sprintf("%T", modelData))
+	reType := reflect.TypeOf(modelData)
+
+	tbName := reflectGetTableName(reType)
+	reValue := reflect.ValueOf(reType).Elem()
+	h.l.Debug("Type:", reType, reValue, tbName)
 
 	return nil
 }
