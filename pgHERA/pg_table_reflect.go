@@ -50,43 +50,37 @@ func reflectGetTableName(v reflect.Type) string {
 	return inflection.Plural(strcase.ToSnake(v.Name()))
 }
 
-func reflectGetTableDefinition(v reflect.Value) tableDefinition {
-	return tableDefinition{}
-}
-
-// getTableDefinition Method gets table definition for model.
-func (h Hera) getTableDefinition(model interface{}) (tableDefinition, error) {
-	val := reflect.ValueOf(model).Elem()
-	h.l.Debug("val:", val)
+// reflectGetTableDefinition Helper method get table definition directly from reflect param.
+func (h Hera) reflectGetTableDefinition(v reflect.Value) (tableDefinition, error) {
+	h.l.Debug("reflected value:", v)
 
 	// existsPK Signalizes if we already have a primary key field.
 	existsPK := false
 	result := tableDefinition{
-		TableName:  h.getTableName(model),
+		TableName:  reflectGetTableName(v.Type()),
 		ColumnsDef: []Column{},
 	}
-
-	for i := 0; i < val.NumField(); i++ {
+	for i := 0; i < v.NumField(); i++ {
 		// check if definition overrides table name
-		if val.Type().Field(i).Name == "tableName" {
-			result.TableName = strings.ToLower(val.Type().Field(i).Tag.Get("hera"))
-			h.l.Warnf("Overrided table name: %v", result.TableName)
+		if v.Type().Field(i).Name == "tableName" {
+			result.TableName = strings.ToLower(v.Type().Field(i).Tag.Get("hera"))
+			h.l.Debug("Overriden table name:", result.TableName)
 		}
 
 		// check if field definition exists in translation table. if not skip field.
-		rdbmsFieldType, exists := (*h.transTable)[val.Type().Field(i).Type.String()]
+		rdbmsFieldType, exists := (*h.transTable)[v.Type().Field(i).Type.String()]
 		if !exists {
-			h.l.Warnf("skipping field number: %v", i)
+			h.l.Warnf("skipping field number: %v type: %s", i, rdbmsFieldType)
 			continue
 		}
 
 		column := Column{
-			ColumnName: strcase.ToSnake(val.Type().Field(i).Name),
+			ColumnName: strcase.ToSnake(v.Type().Field(i).Name),
 		}
 		// adding field type now that we defined the column data holder.
 		column.RDBMSType = rdbmsFieldType
 
-		tag := val.Type().Field(i).Tag.Get("hera")
+		tag := v.Type().Field(i).Tag.Get("hera")
 		h.l.Debug("Tag:", tag)
 
 		// for the `hera:"-"` case
@@ -132,4 +126,12 @@ func (h Hera) getTableDefinition(model interface{}) (tableDefinition, error) {
 		result.ColumnsDef = append(result.ColumnsDef, column)
 	}
 	return result, nil
+}
+
+// getTableDefinition Method gets table definition for model.
+func (h Hera) getTableDefinition(model interface{}) (tableDefinition, error) {
+	val := reflect.ValueOf(model).Elem()
+	h.l.Debug("val:", val)
+
+	return h.reflectGetTableDefinition(val)
 }

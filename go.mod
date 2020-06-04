@@ -3,8 +3,7 @@ module github.com/TudorHulban/HERA
 go 1.14
 
 require (
-	github.com/TudorHulban/log v0.0.0-20200601122447-5a5c8904a9c1
-	github.com/TudorHulban/loginfo v0.0.0-20200524171101-2d753992df9a // indirect
+	github.com/TudorHulban/log v0.0.0-20200604164431-26ff3c3a9255
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334
 	github.com/jinzhu/inflection v1.0.0

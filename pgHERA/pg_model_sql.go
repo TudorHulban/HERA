@@ -21,7 +21,9 @@ func (h Hera) InsertModel(modelData interface{}) error {
 
 	tbName := reflectGetTableName(reType)
 	reValue := reflect.ValueOf(reType).Elem()
+	tbDef, errDef := h.reflectGetTableDefinition(reValue)
 	h.l.Debug("Type:", reType, reValue, tbName)
+	h.l.Debug("Tb Def:", tbDef, errDef)
 
 	return nil
 }

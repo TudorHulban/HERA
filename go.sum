@@ -1,7 +1,7 @@
 github.com/TudorHulban/log v0.0.0-20200601122447-5a5c8904a9c1 h1:FW9CPu4/YT7phthRh/uC/WEhUOc5QBv0qvahheef5UA=
 github.com/TudorHulban/log v0.0.0-20200601122447-5a5c8904a9c1/go.mod h1:ew305nN8YryUTCYmLewSYkDsgLnlhUGMrFxhvastTLI=
-github.com/TudorHulban/loginfo v0.0.0-20200524171101-2d753992df9a h1:AfjDmXFHaGWsACFst3Gb/h0V2/EklsLqeZ0eQne/ADM=
-github.com/TudorHulban/loginfo v0.0.0-20200524171101-2d753992df9a/go.mod h1:LbU9eYIpnpB03EnWO3p/e5zypg9gB2lMEfCqjhRSmFE=
+github.com/TudorHulban/log v0.0.0-20200604164431-26ff3c3a9255 h1:kmoQtBd94rWIbl8ZOabP+oTtTHFLG+YZdRSGbhcZJC4=
+github.com/TudorHulban/log v0.0.0-20200604164431-26ff3c3a9255/go.mod h1:ew305nN8YryUTCYmLewSYkDsgLnlhUGMrFxhvastTLI=
 github.com/alexbrainman/sspi v0.0.0-20180613141037-e580b900e9f5 h1:P5U+E4x5OkVEKQDklVPmzs71WM56RTTRqV4OrDC//Y4=
 github.com/alexbrainman/sspi v0.0.0-20180613141037-e580b900e9f5/go.mod h1:976q2ETgjT2snVCf2ZaBnyBbVoPERGjUz+0sofzEfro=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=

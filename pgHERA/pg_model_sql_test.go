@@ -3,11 +3,12 @@ package pghera
 import (
 	"testing"
 
+	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestInsertModel(t *testing.T) {
-	h, errCo := New(info, 3)
+	h, errCo := New(info, 3, false)
 
 	// create table if not exists
 	if assert.Nil(t, errCo) {
