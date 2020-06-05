@@ -59,23 +59,21 @@ func (h Hera) produceTableColumnShortData(model interface{}) ([]ColumnShortData,
 
 	result := []ColumnShortData{}
 	for i := 0; i < root.Elem().NumField(); i++ {
-		// append only types of fields in table translation and that are not ignored (tag "-").
+		// append only types of fields in table translation and that are not ignored (tag "-") or primary key ( auto incremented ).
 		// fields that are not passed would be considered with default values.
 		fieldRoot := root.Elem().FieldByIndex([]int{i})
 
 		fieldType := fieldRoot.Type.String()
-		h.l.Print("field type: ", fieldType)
+		h.l.Print("field type: ", fieldType, " - ", fieldRoot.Tag)
 
 		if _, exists := (*newTranslationTable())[fieldType]; exists {
-			reflectedValue := reflect.ValueOf(model).Elem().FieldByIndex([]int{i})
-
-			h.l.Print("adding new data - ", reflectedValue)
-
-			result = append(result, ColumnShortData{
-				ColumnName: fieldRoot.Name,
-				RDBMSType:  fieldType,
-				Value:      fmt.Sprintf("%v", reflectedValue),
-			})
+			if !strings.Contains(fmt.Sprintf("%v", fieldRoot.Tag), `"-"`) && !strings.Contains(fmt.Sprintf("%v", fieldRoot.Tag), `"pk"`) {
+				result = append(result, ColumnShortData{
+					ColumnName: fieldRoot.Name,
+					RDBMSType:  fieldType,
+					Value:      fmt.Sprintf("%v", reflect.ValueOf(model).Elem().FieldByIndex([]int{i})),
+				})
+			}
 
 		}
 	}
