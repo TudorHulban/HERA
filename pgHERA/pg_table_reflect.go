@@ -1,5 +1,9 @@
 package pghera
 
+/*
+File concentrates model helpers specific to reflect.
+*/
+
 import (
 	"errors"
 	"reflect"
@@ -8,6 +12,13 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/jinzhu/inflection"
 )
+
+// ColumnShortData concentrates model field data.
+type ColumnShortData struct {
+	ColumnName string
+	RDBMSType  string
+	Value      interface{}
+}
 
 // Column Concentrates table column data.
 type Column struct {
@@ -35,6 +46,29 @@ type User struct {
 	isConnected bool        `hera:"default:true"`                        // nolint
 	comment     string      `hera:"-"`                                   // nolint
 	toSkip      interface{} // nolint
+}
+
+// need a helper to create table columns short info. helper takes a pointer type.
+func produceTableColumnShortData(model interface{}) ([]ColumnShortData, error) {
+	// check if param is pointer
+	root := reflect.TypeOf(model)
+	if !strings.HasPrefix(root.String(), "*") {
+		return []ColumnShortData{}, errors.New("passed data is not a pointer")
+	}
+
+	result := make([]ColumnShortData, root.Elem().NumField())
+
+	for i := 0; i < root.Elem().NumField(); i++ {
+		// append only types of fields in table translation
+		if _, exists := (*newTranslationTable())[root.FieldByIndex([]int{i}).Type.String()]; exists {
+			result[i] = ColumnShortData{
+				ColumnName: root.FieldByIndex([]int{i}).Name,
+				RDBMSType:  root.FieldByIndex([]int{i}).Type.String(),
+				Value:      reflect.ValueOf(model).Elem().FieldByIndex([]int{i}),
+			}
+		}
+	}
+	return []ColumnShortData{}, nil
 }
 
 // getTableName Gets table name from model. Use pointer like interface{}(&Model{}).
