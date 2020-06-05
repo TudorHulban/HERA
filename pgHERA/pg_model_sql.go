@@ -1,6 +1,7 @@
 package pghera
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -21,7 +22,7 @@ func (h Hera) InsertModel(modelData interface{}) error {
 	if !h.isItPointer(modelData) {
 		return ErrorNotAPointer
 	}
-	modelData, errData := h.produceTableColumnShortData(modelData)
+	modelColumnData, errData := h.produceTableColumnShortData(modelData)
 	if errData != nil {
 		return errData
 	}
@@ -29,14 +30,23 @@ func (h Hera) InsertModel(modelData interface{}) error {
 	if errName != nil {
 		return errName
 	}
-
 	ddl := []string{"insert into", tbName.TableName, "("}
-	for _, v := range modelData.([]ColumnShortData) {
+	for k, v := range modelColumnData {
 		ddl = append(ddl, v.ColumnName)
+		if k < len(modelColumnData)-1 {
+			ddl = append(ddl, ",")
+		}
 	}
 	ddl = append(ddl, ") VALUES (")
-	for _, v := range modelData.([]ColumnShortData) {
-		ddl = append(ddl, v.Value.String())
+	for k, v := range modelColumnData {
+		var delim string
+		if v.RDBMSType.String() == "string" {
+			delim = `"`
+		}
+		ddl = append(ddl, delim+fmt.Sprintf("%v", v.Value)+delim)
+		if k < len(modelColumnData)-1 {
+			ddl = append(ddl, ",")
+		}
 	}
 	ddl = append(ddl, ");")
 	ddlSQL := strings.Join(ddl, " ")

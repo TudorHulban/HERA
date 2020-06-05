@@ -8,7 +8,7 @@ import (
 )
 
 func TestInsertModel(t *testing.T) {
-	h, errCo := New(info, 3, false)
+	h, errCo := New(info, 3, true)
 
 	// create table if not exists
 	if assert.Nil(t, errCo) {
@@ -30,7 +30,6 @@ func TestInsertModel(t *testing.T) {
 			name: "john",
 			age:  34,
 		}
-		h.l.Debug(mdata)
 
 		errIns := h.InsertModel(mdata)
 		assert.Nil(t, errIns)

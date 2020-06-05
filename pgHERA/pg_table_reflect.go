@@ -67,7 +67,7 @@ func (h Hera) produceTableColumnShortData(model interface{}) ([]ColumnShortData,
 		// fields that are not passed would be considered with default values.
 		fieldRoot := reflect.TypeOf(model).Elem().FieldByIndex([]int{i})
 
-		h.l.Print("field type: ", fieldRoot.Type.String(), " - ", fieldRoot.Tag)
+		h.l.Debug("field type: ", fieldRoot.Type.String(), " - ", fieldRoot.Tag)
 
 		if _, exists := (*newTranslationTable())[fieldRoot.Type.String()]; exists {
 			if !strings.Contains(fmt.Sprintf("%v", fieldRoot.Tag), `"-"`) && !strings.Contains(fmt.Sprintf("%v", fieldRoot.Tag), `"pk"`) {
