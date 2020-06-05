@@ -6,6 +6,7 @@ File concentrates model helpers specific to reflect.
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -49,26 +50,36 @@ type User struct {
 }
 
 // need a helper to create table columns short info. helper takes a pointer type.
-func produceTableColumnShortData(model interface{}) ([]ColumnShortData, error) {
+func (h Hera) produceTableColumnShortData(model interface{}) ([]ColumnShortData, error) {
 	// check if param is pointer
 	root := reflect.TypeOf(model)
 	if !strings.HasPrefix(root.String(), "*") {
 		return []ColumnShortData{}, errors.New("passed data is not a pointer")
 	}
 
-	result := make([]ColumnShortData, root.Elem().NumField())
-
+	result := []ColumnShortData{}
 	for i := 0; i < root.Elem().NumField(); i++ {
-		// append only types of fields in table translation
-		if _, exists := (*newTranslationTable())[root.FieldByIndex([]int{i}).Type.String()]; exists {
-			result[i] = ColumnShortData{
-				ColumnName: root.FieldByIndex([]int{i}).Name,
-				RDBMSType:  root.FieldByIndex([]int{i}).Type.String(),
-				Value:      reflect.ValueOf(model).Elem().FieldByIndex([]int{i}),
-			}
+		// append only types of fields in table translation and that are not ignored (tag "-").
+		// fields that are not passed would be considered with default values.
+		fieldRoot := root.Elem().FieldByIndex([]int{i})
+
+		fieldType := fieldRoot.Type.String()
+		h.l.Print("field type: ", fieldType)
+
+		if _, exists := (*newTranslationTable())[fieldType]; exists {
+			reflectedValue := reflect.ValueOf(model).Elem().FieldByIndex([]int{i})
+
+			h.l.Print("adding new data - ", reflectedValue)
+
+			result = append(result, ColumnShortData{
+				ColumnName: fieldRoot.Name,
+				RDBMSType:  fieldType,
+				Value:      fmt.Sprintf("%v", reflectedValue),
+			})
+
 		}
 	}
-	return []ColumnShortData{}, nil
+	return result, nil
 }
 
 // getTableName Gets table name from model. Use pointer like interface{}(&Model{}).
