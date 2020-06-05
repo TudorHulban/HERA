@@ -1,6 +1,8 @@
 package pghera
 
-import "reflect"
+import (
+	"strings"
+)
 
 // Query Method returns data as slice of slice of interface{}.
 func (h Hera) Query(sql string) (RowData, error) {
@@ -16,14 +18,28 @@ func (h Hera) Query(sql string) (RowData, error) {
 	return data, nil
 }
 func (h Hera) InsertModel(modelData interface{}) error {
-	// get model type
-	reType := reflect.TypeOf(modelData)
+	if !h.isItPointer(modelData) {
+		return ErrorNotAPointer
+	}
+	modelData, errData := h.produceTableColumnShortData(modelData)
+	if errData != nil {
+		return errData
+	}
+	tbName, errName := h.getTableDefinition(modelData, true)
+	if errName != nil {
+		return errName
+	}
 
-	tbName := reflectGetTableName(reType)
-	reValue := reflect.ValueOf(reType).Elem()
-	tbDef, errDef := h.reflectGetTableDefinition(reValue)
-	h.l.Debug("Type:", reType, reValue, tbName)
-	h.l.Debug("Tb Def:", tbDef, errDef)
-
+	ddl := []string{"insert into", tbName.TableName, "("}
+	for _, v := range modelData.([]ColumnShortData) {
+		ddl = append(ddl, v.ColumnName)
+	}
+	ddl = append(ddl, ") VALUES (")
+	for _, v := range modelData.([]ColumnShortData) {
+		ddl = append(ddl, v.Value.String())
+	}
+	ddl = append(ddl, ");")
+	ddlSQL := strings.Join(ddl, " ")
+	h.l.Print("DDL: ", ddlSQL)
 	return nil
 }

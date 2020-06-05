@@ -8,7 +8,7 @@ import (
 // CreateTable Method creates table based on model. It can only parse model to return table that it would create.
 // It returns table name as table name could be overidden in struct. This way we are sure what was created.
 func (h Hera) CreateTable(model interface{}, simulateOnly bool) (string, error) {
-	tbDef, errDef := h.getTableDefinition(model)
+	tbDef, errDef := h.getTableDefinition(model, false)
 	if errDef != nil {
 		return "", errDef
 	}

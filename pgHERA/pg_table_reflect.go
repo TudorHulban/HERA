@@ -17,8 +17,8 @@ import (
 // ColumnShortData concentrates model field data.
 type ColumnShortData struct {
 	ColumnName string
-	RDBMSType  string
-	Value      interface{}
+	RDBMSType  reflect.Type
+	Value      reflect.Value
 }
 
 // Column Concentrates table column data.
@@ -49,32 +49,34 @@ type User struct {
 	toSkip      interface{} // nolint
 }
 
+// isItPointer Checks if param is a pointer.
+func (h Hera) isItPointer(model interface{}) bool {
+	h.l.Debug("Passed data of type: ", reflect.TypeOf(model))
+	return strings.HasPrefix(reflect.TypeOf(model).String(), "*")
+}
+
 // need a helper to create table columns short info. helper takes a pointer type.
 func (h Hera) produceTableColumnShortData(model interface{}) ([]ColumnShortData, error) {
-	// check if param is pointer
-	root := reflect.TypeOf(model)
-	if !strings.HasPrefix(root.String(), "*") {
-		return []ColumnShortData{}, errors.New("passed data is not a pointer")
+	if !h.isItPointer(model) {
+		return []ColumnShortData{}, ErrorNotAPointer
 	}
 
 	result := []ColumnShortData{}
-	for i := 0; i < root.Elem().NumField(); i++ {
+	for i := 0; i < reflect.TypeOf(model).Elem().NumField(); i++ {
 		// append only types of fields in table translation and that are not ignored (tag "-") or primary key ( auto incremented ).
 		// fields that are not passed would be considered with default values.
-		fieldRoot := root.Elem().FieldByIndex([]int{i})
+		fieldRoot := reflect.TypeOf(model).Elem().FieldByIndex([]int{i})
 
-		fieldType := fieldRoot.Type.String()
-		h.l.Print("field type: ", fieldType, " - ", fieldRoot.Tag)
+		h.l.Print("field type: ", fieldRoot.Type.String(), " - ", fieldRoot.Tag)
 
-		if _, exists := (*newTranslationTable())[fieldType]; exists {
+		if _, exists := (*newTranslationTable())[fieldRoot.Type.String()]; exists {
 			if !strings.Contains(fmt.Sprintf("%v", fieldRoot.Tag), `"-"`) && !strings.Contains(fmt.Sprintf("%v", fieldRoot.Tag), `"pk"`) {
 				result = append(result, ColumnShortData{
 					ColumnName: fieldRoot.Name,
-					RDBMSType:  fieldType,
-					Value:      fmt.Sprintf("%v", reflect.ValueOf(model).Elem().FieldByIndex([]int{i})),
+					RDBMSType:  fieldRoot.Type,
+					Value:      reflect.ValueOf(model).Elem().FieldByIndex([]int{i}),
 				})
 			}
-
 		}
 	}
 	return result, nil
@@ -94,7 +96,7 @@ func reflectGetTableName(v reflect.Type) string {
 }
 
 // reflectGetTableDefinition Helper method get table definition directly from reflect param.
-func (h Hera) reflectGetTableDefinition(v reflect.Value) (tableDefinition, error) {
+func (h Hera) reflectGetTableDefinition(v reflect.Value, getOnlyTableName bool) (tableDefinition, error) {
 	h.l.Debug("reflected value:", v)
 
 	// existsPK Signalizes if we already have a primary key field.
@@ -108,6 +110,10 @@ func (h Hera) reflectGetTableDefinition(v reflect.Value) (tableDefinition, error
 		if v.Type().Field(i).Name == "tableName" {
 			result.TableName = strings.ToLower(v.Type().Field(i).Tag.Get("hera"))
 			h.l.Debug("Overriden table name:", result.TableName)
+		}
+
+		if getOnlyTableName {
+			return result, nil
 		}
 
 		// check if field definition exists in translation table. if not skip field.
@@ -172,9 +178,12 @@ func (h Hera) reflectGetTableDefinition(v reflect.Value) (tableDefinition, error
 }
 
 // getTableDefinition Method gets table definition for model.
-func (h Hera) getTableDefinition(model interface{}) (tableDefinition, error) {
+func (h Hera) getTableDefinition(model interface{}, getOnlyTableName bool) (tableDefinition, error) {
+	if !h.isItPointer(model) {
+		return tableDefinition{}, ErrorNotAPointer
+	}
 	val := reflect.ValueOf(model).Elem()
 	h.l.Debug("val:", val)
 
-	return h.reflectGetTableDefinition(val)
+	return h.reflectGetTableDefinition(val, getOnlyTableName)
 }

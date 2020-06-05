@@ -26,7 +26,7 @@ func TestInsertModel(t *testing.T) {
 		}
 
 		// define model data to insert
-		mdata := User{
+		mdata := &User{
 			name: "john",
 			age:  34,
 		}
@@ -34,6 +34,5 @@ func TestInsertModel(t *testing.T) {
 
 		errIns := h.InsertModel(mdata)
 		assert.Nil(t, errIns)
-
 	}
 }
