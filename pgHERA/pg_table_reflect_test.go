@@ -7,15 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetTableName(t *testing.T) {
-	h, errCo := New(info, 0, false)
-	if assert.Nil(t, errCo) {
-		defer h.DBConn.Close()
-
-		assert.Equal(t, h.getTableName(interface{}(&User{})), "users")
-	}
-}
-
 func TestGetTableColumns(t *testing.T) {
 	h, errCo := New(info, 0, false)
 	if assert.Nil(t, errCo) {

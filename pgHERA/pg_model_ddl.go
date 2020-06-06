@@ -45,7 +45,7 @@ func (h Hera) CreateTable(model interface{}, simulateOnly bool) (string, error) 
 	return tbDef.TableName, nil
 }
 
-// TableExists - returns nil if table exists
+// TableExists Method returns nil if table exists.
 func (h Hera) TableExists(tableName string) error {
 	theDML := "SELECT exists (select 1 from information_schema.tables WHERE table_schema='public' AND table_name=" + "'" + tableName + "'" + ")"
 

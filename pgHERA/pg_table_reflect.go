@@ -72,11 +72,6 @@ func (h Hera) produceTableColumnShortData(model interface{}) ([]ColumnShortData,
 	return result, nil
 }
 
-/* // getTableName Gets table name from model. Use pointer like interface{}(&Model{}).
-func (h Hera) getTableName(model interface{}) string {
-	return reflectGetTableName(reflect.TypeOf(model))
-} */
-
 // reflectGetTableName Helper in case the value is needed using reflection types.
 func reflectGetTableName(v reflect.Type) string {
 	if v.Kind() == reflect.Ptr {

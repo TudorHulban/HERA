@@ -12,7 +12,7 @@ import (
 // b. check if it exists
 // c. is dropped corectly
 func TestTableDDL(t *testing.T) {
-	h, errCo := New(info, 0)
+	h, errCo := New(info, 0, true)
 	if assert.Nil(t, errCo) {
 		defer h.DBConn.Close()
 
