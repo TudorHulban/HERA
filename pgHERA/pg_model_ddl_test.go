@@ -12,9 +12,9 @@ import (
 // b. check if it exists
 // c. is dropped corectly
 func TestTableDDL(t *testing.T) {
-	h, errCo := New(info, 0, true)
+	h, errCo := New(LocalDBInfo, 0, true)
 	if assert.Nil(t, errCo) {
-		defer h.DBConn.Close()
+		defer h.CloseDBConnection()
 
 		// get table name to create first
 		tableName, errParse := h.CreateTable(interface{}(&User{}), true)

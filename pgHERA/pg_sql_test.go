@@ -8,7 +8,7 @@ import (
 )
 
 func TestCo(t *testing.T) {
-	h, errCo := New(info, 3, false)
+	h, errCo := New(LocalDBInfo, 3, false)
 	if assert.Nil(t, errCo) {
 		h.DBConn.Close()
 	}

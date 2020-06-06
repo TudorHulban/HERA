@@ -44,3 +44,8 @@ func New(db DBInfo, logLevel int, wCaller bool) (Hera, error) {
 		l:          log.New(logLevel, os.Stderr, wCaller),
 	}, nil
 }
+
+// CloseConnection Method closes connection to database.
+func (h Hera) CloseDBConnection() error {
+	return h.DBConn.Close()
+}

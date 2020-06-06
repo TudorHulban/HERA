@@ -8,9 +8,9 @@ import (
 )
 
 func TestGetTableColumns(t *testing.T) {
-	h, errCo := New(info, 0, false)
+	h, errCo := New(LocalDBInfo, 0, false)
 	if assert.Nil(t, errCo) {
-		defer h.DBConn.Close()
+		defer h.CloseDBConnection()
 
 		c, errColumns := h.getTableDefinition(interface{}(&User{}), false)
 		assert.Nil(t, errColumns)
@@ -20,9 +20,9 @@ func TestGetTableColumns(t *testing.T) {
 }
 
 func TestListTableColumns(t *testing.T) {
-	h, errCo := New(info, 1, false)
+	h, errCo := New(LocalDBInfo, 1, false)
 	if assert.Nil(t, errCo) {
-		defer h.DBConn.Close()
+		defer h.CloseDBConnection()
 
 		c, errColumns := h.getTableDefinition(interface{}(&User{}), false)
 		assert.Nil(t, errColumns)
@@ -40,7 +40,8 @@ func TestProduceModelData(t *testing.T) {
 	}
 
 	// not considering error as we do not need DB
-	h, _ := New(info, 3, false)
+	h, _ := New(LocalDBInfo, 3, false)
+
 	_, errPro := h.produceTableColumnShortData(mdata)
 	assert.Error(t, errPro)
 

@@ -8,11 +8,11 @@ import (
 )
 
 func TestInsertModel(t *testing.T) {
-	h, errCo := New(info, 3, true)
+	h, errCo := New(LocalDBInfo, 3, true)
 
 	// create table if not exists
 	if assert.Nil(t, errCo) {
-		defer h.DBConn.Close()
+		defer h.CloseDBConnection()
 
 		// get table name to check if it exists
 		tableName, errParse := h.CreateTable(interface{}(&User{}), true)
