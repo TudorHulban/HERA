@@ -53,6 +53,8 @@ func (h Hera) InsertModel(modelData interface{}) error {
 	}
 	ddl = append(ddl, ");")
 	ddlSQL := strings.Join(ddl, " ")
-	h.l.Print("DDL: ", ddlSQL)
-	return nil
+	h.L.Print("SQL: ", ddlSQL)
+
+	_, errIns := h.DBConn.Exec(ddlSQL)
+	return errIns
 }

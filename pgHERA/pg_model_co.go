@@ -23,7 +23,7 @@ type Hera struct {
 	DBConn *sql.DB
 	// used for translating structure fields to RDBMS field types
 	transTable *translationTable
-	l          *log.LogInfo
+	L          *log.LogInfo
 }
 
 // New Constructor for database connection. Preferable only one connection per DB.
@@ -41,7 +41,7 @@ func New(db DBInfo, logLevel int, wCaller bool) (Hera, error) {
 		DBInfo:     db,
 		DBConn:     dbconn,
 		transTable: newTranslationTable(),
-		l:          log.New(logLevel, os.Stderr, wCaller),
+		L:          log.New(logLevel, os.Stderr, wCaller),
 	}, nil
 }
 

@@ -41,7 +41,7 @@ type tableDefinition struct {
 
 // isItPointer Checks if param is a pointer.
 func (h Hera) isItPointer(model interface{}) bool {
-	h.l.Debug("Passed data of type: ", reflect.TypeOf(model))
+	h.L.Debug("Passed data of type: ", reflect.TypeOf(model))
 	return strings.HasPrefix(reflect.TypeOf(model).String(), "*")
 }
 
@@ -57,7 +57,7 @@ func (h Hera) produceTableColumnShortData(model interface{}) ([]ColumnShortData,
 		// fields that are not passed would be considered with default values.
 		fieldRoot := reflect.TypeOf(model).Elem().FieldByIndex([]int{i})
 
-		h.l.Debug("field type: ", fieldRoot.Type.String(), " - ", fieldRoot.Tag)
+		h.L.Debug("field type: ", fieldRoot.Type.String(), " - ", fieldRoot.Tag)
 
 		if _, exists := (*newTranslationTable())[fieldRoot.Type.String()]; exists {
 			if !strings.Contains(fmt.Sprintf("%v", fieldRoot.Tag), `"-"`) && !strings.Contains(fmt.Sprintf("%v", fieldRoot.Tag), `"pk"`) {
@@ -129,7 +129,7 @@ func (h Hera) reflectGetTableDefinition(v reflect.Value, getOnlyTableName bool) 
 		// check if definition overrides table name
 		if v.Type().Field(i).Name == "tableName" {
 			result.TableName = strings.ToLower(v.Type().Field(i).Tag.Get("hera"))
-			h.l.Debug("Overriden table name:", result.TableName)
+			h.L.Debug("Overriden table name:", result.TableName)
 		}
 
 		if getOnlyTableName {
@@ -139,7 +139,7 @@ func (h Hera) reflectGetTableDefinition(v reflect.Value, getOnlyTableName bool) 
 		// check if field definition exists in translation table. if not skip field.
 		rdbmsFieldType, exists := (*h.transTable)[v.Type().Field(i).Type.String()]
 		if !exists {
-			h.l.Warnf("skipping field number: %v type: %s", i, rdbmsFieldType)
+			h.L.Warnf("skipping field number: %v type: %s", i, rdbmsFieldType)
 			continue
 		}
 
@@ -150,7 +150,7 @@ func (h Hera) reflectGetTableDefinition(v reflect.Value, getOnlyTableName bool) 
 		column.RDBMSType = rdbmsFieldType
 
 		tag := v.Type().Field(i).Tag.Get("hera")
-		h.l.Debug("Tag:", tag)
+		h.L.Debug("Tag:", tag)
 
 		// for the `hera:"-"` case
 		ignoreField := false
@@ -176,7 +176,7 @@ func (h Hera) getTableDefinition(model interface{}, getOnlyTableName bool) (tabl
 		return tableDefinition{}, ErrorNotAPointer
 	}
 	val := reflect.ValueOf(model).Elem()
-	h.l.Debug("val:", val)
+	h.L.Debug("val:", val)
 
 	return h.reflectGetTableDefinition(val, getOnlyTableName)
 }
