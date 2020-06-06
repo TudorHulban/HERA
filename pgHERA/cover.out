@@ -9,6 +9,7 @@ github.com/TudorHulban/HERA/pgHERA/pg_table_reflect.go:68.3,69.14 2 1
 github.com/TudorHulban/HERA/pgHERA/pg_table_reflect.go:74.3,86.19 6 1
 github.com/TudorHulban/HERA/pgHERA/pg_table_reflect.go:120.3,120.18 1 1
 github.com/TudorHulban/HERA/pgHERA/pg_table_reflect.go:123.3,123.56 1 1
+
 github.com/TudorHulban/HERA/pgHERA/pg_table_reflect.go:62.46,65.4 2 1
 github.com/TudorHulban/HERA/pgHERA/pg_table_reflect.go:69.14,71.12 2 1
 github.com/TudorHulban/HERA/pgHERA/pg_table_reflect.go:86.19,89.30 2 1

@@ -18,6 +18,9 @@ func (h Hera) Query(sql string) (RowData, error) {
 	}
 	return data, nil
 }
+
+// InsertModel Method tries to insert data passed as model data.
+// Fields in model that are not passed are inserted with Go default values.
 func (h Hera) InsertModel(modelData interface{}) error {
 	if !h.isItPointer(modelData) {
 		return ErrorNotAPointer

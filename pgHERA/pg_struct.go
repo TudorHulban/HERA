@@ -1,5 +1,16 @@
 package pghera
 
+// User Type used for developing. TODO: Move to test or documentation.
+type User struct {
+	tableName   struct{}    `hera:"theTableName"`                        // nolint
+	ID          int64       `hera:"pk"`                                  // nolint
+	name        string      `hera:"default:xx, index"`                   // nolint
+	age         int         `hera:"required, column-name:theage, index"` // nolint
+	isConnected bool        `hera:"default:true"`                        // nolint
+	comment     string      `hera:"-"`                                   // nolint
+	toSkip      interface{} // nolint
+}
+
 // --------- DDL
 
 // ColumnDef provides DDL for table column.
@@ -23,7 +34,7 @@ type SchemaDDL struct {
 
 // ----------- INSERT. Data contains values and names.
 
-// ColNames Type for CSV of column names.
+// TableColumnNames Type for CSV of column names.
 type TableColumnNames struct {
 	ColumnNames []string
 }
@@ -33,7 +44,7 @@ type RowValues struct {
 	Values []interface{}
 }
 
-// RowValues contains data from given table.
+// RowData contains data from given table.
 type RowData struct {
 	TableName string
 	TableColumnNames

@@ -59,6 +59,7 @@ func (h Hera) TableExists(tableName string) error {
 	return errors.New("table " + tableName + " does not exist in " + h.DBName)
 }
 
+// DropTable Method would try to drop passed table.
 func (h Hera) DropTable(tableName string, withCascade bool) error {
 	ddl := []string{"drop table IF EXISTS", tableName}
 	if withCascade {

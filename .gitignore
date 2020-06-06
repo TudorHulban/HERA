@@ -1,3 +1,7 @@
 *
 !*/
 !*.*
+
+
+# LITE IDE test coverage files
+*.out

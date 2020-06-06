@@ -39,16 +39,6 @@ type tableDefinition struct {
 	ColumnsDef []Column
 }
 
-type User struct {
-	tableName   struct{}    `hera:"theTableName"`
-	ID          int64       `hera:"pk"`                                  // nolint
-	name        string      `hera:"default:xx, index"`                   // nolint
-	age         int         `hera:"required, column-name:theage, index"` // nolint
-	isConnected bool        `hera:"default:true"`                        // nolint
-	comment     string      `hera:"-"`                                   // nolint
-	toSkip      interface{} // nolint
-}
-
 // isItPointer Checks if param is a pointer.
 func (h Hera) isItPointer(model interface{}) bool {
 	h.l.Debug("Passed data of type: ", reflect.TypeOf(model))
@@ -82,10 +72,10 @@ func (h Hera) produceTableColumnShortData(model interface{}) ([]ColumnShortData,
 	return result, nil
 }
 
-// getTableName Gets table name from model. Use pointer like interface{}(&Model{}).
+/* // getTableName Gets table name from model. Use pointer like interface{}(&Model{}).
 func (h Hera) getTableName(model interface{}) string {
 	return reflectGetTableName(reflect.TypeOf(model))
-}
+} */
 
 // reflectGetTableName Helper in case the value is needed using reflection types.
 func reflectGetTableName(v reflect.Type) string {
@@ -95,16 +85,51 @@ func reflectGetTableName(v reflect.Type) string {
 	return inflection.Plural(strcase.ToSnake(v.Name()))
 }
 
+// parseFieldTags Method takes field tags and a pointer to already populated column definition.
+// It populates even more the column definition or returns an error or to ignore the field.
+func (h Hera) parseFieldTags(fieldTags string, columnDef *Column, existsPK bool) (bool, error) {
+	for _, tagS := range strings.Split(fieldTags, ",") {
+		s := strings.ToLower(strings.TrimSpace(tagS))
+
+		if s == "-" {
+			return true, nil
+		}
+		if s == "pk" {
+			if existsPK {
+				return false, errors.New("more than one primary key field detected. max is 1")
+			}
+			existsPK = true
+			columnDef.PK = true
+		}
+		if s == "unique" {
+			columnDef.Unique = true
+		}
+		if s == "index" {
+			columnDef.Index = true
+		}
+		if s == "required" {
+			columnDef.Required = true
+		}
+		if strings.Contains(s, "default:") {
+			columnDef.DefaultValue = s[8:]
+		}
+		if strings.Contains(s, "column-name:") {
+			columnDef.ColumnName = s[12:]
+		}
+	}
+	return false, nil
+}
+
 // reflectGetTableDefinition Helper method get table definition directly from reflect param.
 func (h Hera) reflectGetTableDefinition(v reflect.Value, getOnlyTableName bool) (tableDefinition, error) {
-	h.l.Debug("reflected value:", v)
-
 	// existsPK Signalizes if we already have a primary key field.
 	existsPK := false
 	result := tableDefinition{
 		TableName:  reflectGetTableName(v.Type()),
 		ColumnsDef: []Column{},
 	}
+
+	// loops through all structure fields! (not all passed fields)
 	for i := 0; i < v.NumField(); i++ {
 		// check if definition overrides table name
 		if v.Type().Field(i).Name == "tableName" {
@@ -136,37 +161,10 @@ func (h Hera) reflectGetTableDefinition(v reflect.Value, getOnlyTableName bool) 
 		ignoreField := false
 
 		if len(tag) > 0 {
-			tags := strings.Split(tag, ",")
-
-			for _, tagS := range tags {
-				s := strings.ToLower(strings.TrimSpace(tagS))
-
-				if s == "-" {
-					ignoreField = true
-					break
-				}
-				if s == "pk" {
-					if existsPK {
-						return tableDefinition{}, errors.New("more than one primary key field detected. max is 1")
-					}
-					existsPK = true
-					column.PK = true
-				}
-				if s == "unique" {
-					column.Unique = true
-				}
-				if s == "index" {
-					column.Index = true
-				}
-				if s == "required" {
-					column.Required = true
-				}
-				if strings.Contains(s, "default:") {
-					column.DefaultValue = s[8:]
-				}
-				if strings.Contains(s, "column-name:") {
-					column.ColumnName = s[12:]
-				}
+			var errParse error
+			ignoreField, errParse = h.parseFieldTags(tag, &column, existsPK)
+			if errParse != nil {
+				return tableDefinition{}, errors.New("could not parse tag " + tag)
 			}
 		}
 		if ignoreField {
