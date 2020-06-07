@@ -29,7 +29,7 @@ func (h Hera) InsertModel(modelData interface{}) error {
 	if !h.isItPointer(modelData) {
 		return ErrorNotAPointer
 	}
-	modelColumnData, errData := h.produceTableColumnShortData(modelData)
+	modelColumnsData, errData := h.produceTableColumnShortData(modelData)
 	if errData != nil {
 		return errData
 	}
@@ -38,20 +38,20 @@ func (h Hera) InsertModel(modelData interface{}) error {
 		return errName
 	}
 	ddl := []string{"insert into", tbName.TableName, "("}
-	for k, v := range modelColumnData {
+	for k, v := range modelColumnsData {
 		ddl = append(ddl, strings.ToLower(v.ColumnName))
-		if k < len(modelColumnData)-1 {
+		if k < len(modelColumnsData)-1 {
 			ddl = append(ddl, ",")
 		}
 	}
 	ddl = append(ddl, ") VALUES (")
-	for k, v := range modelColumnData {
+	for k, v := range modelColumnsData {
 		var delim string
 		if v.RDBMSType == "text" {
 			delim = `'`
 		}
 		ddl = append(ddl, delim+fmt.Sprintf("%v", v.Value)+delim)
-		if k < len(modelColumnData)-1 {
+		if k < len(modelColumnsData)-1 {
 			ddl = append(ddl, ",")
 		}
 	}

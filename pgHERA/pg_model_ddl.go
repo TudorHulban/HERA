@@ -5,9 +5,16 @@ import (
 	"strings"
 )
 
+/*
+File concentrates methods related to Data Definition Language (DDL) operations.
+*/
+
 // CreateTable Method creates table based on model.
 // In simulation mode it only parses model to return table name that it would create and DDL.
-// It returns table name as table name could be overidden in struct. This way we are sure what was created.
+// Returns:
+// a. Table name - This way we are sure what was created as table name could have been overidden in structure tags.
+// b. Table DDL - Helpfull in tests.
+// c. Error - When error the other returns are default value for type, aka "".
 func (h Hera) CreateTable(model interface{}, simulateOnly bool) (string, string, error) {
 	tbDef, errDef := h.getTableDefinition(model, false)
 	if errDef != nil {
@@ -26,24 +33,23 @@ func (h Hera) CreateTable(model interface{}, simulateOnly bool) (string, string,
 		}
 	}
 	tbDDL = append(tbDDL, ");")
-
 	tableDDL := strings.Join(tbDDL, " ")
 
 	if simulateOnly {
 		return tbDef.TableName, tableDDL, nil
 	}
-
 	// execute now the DDL
 	if _, errCreate := h.DBConn.Exec(tableDDL); errCreate != nil {
 		return "", "", errCreate
 	}
-
-	// returning table name for eventual cleaning. table was created at this point.
+	// checking if multi column index needs to be created.
+	// if any error returning table name for eventual cleaning. table was created at this point.
 	if indexDDL := getIndexDDL(tbDef); indexDDL != "" {
 		if _, errIndex := h.DBConn.Exec(indexDDL); errIndex != nil {
 			return tbDef.TableName, "", errIndex
 		}
 	}
+	// now sure table created. index created.
 	return tbDef.TableName, "", nil
 }
 

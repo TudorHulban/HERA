@@ -45,7 +45,7 @@ func (h Hera) isItPointer(model interface{}) bool {
 	return strings.HasPrefix(reflect.TypeOf(model).String(), "*")
 }
 
-// need a helper to create table columns short info. helper takes a pointer type.
+// produceTableColumnShortData Helper method to create table columns short info. helper takes a pointer type.
 // should parse tag for column name override.
 func (h Hera) produceTableColumnShortData(model interface{}) ([]ColumnShortData, error) {
 	if !h.isItPointer(model) {
@@ -57,39 +57,45 @@ func (h Hera) produceTableColumnShortData(model interface{}) ([]ColumnShortData,
 		// append only types of fields in table translation and that are not ignored (tag "-") or primary key ( auto incremented ).
 		// fields that are not passed would be considered with default values.
 		fieldRoot := reflect.TypeOf(model).Elem().FieldByIndex([]int{i})
-
 		h.L.Debug("field type: ", fieldRoot.Type.String(), " - ", fieldRoot.Tag)
 
-		if getRDBMSType(fieldRoot.Type.String(), false) != "" {
-			if !strings.Contains(fmt.Sprintf("%v", fieldRoot.Tag), `"-"`) && !strings.Contains(fmt.Sprintf("%v", fieldRoot.Tag), `"pk"`) {
-				// data for column
-				columnDef := new(Column)
-				_, errPar := h.parseFieldTags(fmt.Sprintf("%v", fieldRoot.Tag), columnDef, false)
-				if errPar != nil {
-					return []ColumnShortData{}, errPar
-				}
-
-				// check if any column name overridden in tag.
-				var columnName string
-				if columnDef.ColumnName != "" {
-					columnName = columnDef.ColumnName
-				} else {
-					columnName = fieldRoot.Name
-				}
-
-				result = append(result, ColumnShortData{
-					ColumnName: columnName,
-					// to be taken from translation table
-					RDBMSType: getRDBMSType(fieldRoot.Type.String(), columnDef.PK),
-					Value:     reflect.ValueOf(model).Elem().FieldByIndex([]int{i}),
-				})
+		if !strings.Contains(fmt.Sprintf("%v", fieldRoot.Tag), `"-"`) && !strings.Contains(fmt.Sprintf("%v", fieldRoot.Tag), `"pk"`) {
+			// data for column. creating a pointer to fill it up.
+			columnDef := new(Column)
+			_, errPar := h.parseFieldTags(fmt.Sprintf("%v", fieldRoot.Tag), columnDef, false)
+			if errPar != nil {
+				return []ColumnShortData{}, errPar
 			}
+
+			// check if field type is in translation table
+			rdbmsType := getRDBMSType(fieldRoot.Type.String(), columnDef.PK)
+			if rdbmsType == "" {
+				// type not supported. if it has tags it is an error. if no tags continue.
+				if strings.Contains(fmt.Sprintf("%v", fieldRoot.Tag), `"hera"`) {
+					return []ColumnShortData{}, errors.New("type " + fieldRoot.Type.String() + " cannot be translated to a RDBMS type")
+				}
+				continue
+			}
+			// check if any column name overridden in tag.
+			var columnName string
+			if columnDef.ColumnName != "" {
+				columnName = columnDef.ColumnName
+			} else {
+				columnName = fieldRoot.Name
+			}
+
+			result = append(result, ColumnShortData{
+				ColumnName: columnName,
+				// to be taken from translation table
+				RDBMSType: rdbmsType,
+				Value:     reflect.ValueOf(model).Elem().FieldByIndex([]int{i}),
+			})
 		}
 	}
 	return result, nil
 }
 
-// reflectGetTableName Helper in case the value is needed using reflection types.
+// reflectGetTableName Helper in case the table name value is needed using reflection types.
 func reflectGetTableName(v reflect.Type) string {
 	if v.Kind() == reflect.Ptr {
 		return inflection.Plural(strcase.ToSnake(v.Elem().Name()))
@@ -97,16 +103,19 @@ func reflectGetTableName(v reflect.Type) string {
 	return inflection.Plural(strcase.ToSnake(v.Name()))
 }
 
-// parseFieldTags Method takes field tags and a pointer to already populated column definition.
-// It populates even more the column definition or returns an error or to ignore the field.
-// If field to skip it returns true, nil.
+// parseFieldTags Method takes "hera" field tags and a pointer to already populated column definition.
+// It populates even more the column definition. It returns
+// a. boolean to ignore the field with passed structure. Ignore if true.
+// b. error
 func (h Hera) parseFieldTags(fieldTags string, columnDef *Column, existsPK bool) (bool, error) {
-	for _, tagS := range strings.Split(fieldTags, ",") {
-		s := strings.ToLower(strings.TrimSpace(tagS))
+	for _, tag := range strings.Split(fieldTags, ",") {
+		s := strings.ToLower(strings.TrimSpace(tag))
 
+		// tag to ignore field.
 		if s == "-" {
 			return true, nil
 		}
+		// tag for primary key.
 		if s == "pk" {
 			if existsPK {
 				return false, errors.New("more than one primary key field detected. max is 1")
@@ -114,18 +123,23 @@ func (h Hera) parseFieldTags(fieldTags string, columnDef *Column, existsPK bool)
 			existsPK = true
 			columnDef.PK = true
 		}
+		// tag for unicity on column.
 		if s == "unique" {
 			columnDef.Unique = true
 		}
+		// tag for being part in multi column index. for single column index use unique
 		if s == "index" {
 			columnDef.Index = true
 		}
+		// field cannot be null
 		if s == "required" {
 			columnDef.Required = true
 		}
+		// default value to be used.
 		if strings.Contains(s, "default:") {
 			columnDef.DefaultValue = s[8:]
 		}
+		// tag to everride column name created as per structure field.
 		if strings.Contains(s, "column-name:") {
 			columnDef.ColumnName = s[12:]
 		}
