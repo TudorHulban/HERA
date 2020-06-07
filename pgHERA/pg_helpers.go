@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+/*
+File contains helpers that were not glued to model.
+*/
+
 // rowsToSlice - https://kylewbanks.com/blog/query-result-to-map-in-golang
 // transformation independent of table name.
 func rowsToSlice(rows *sql.Rows) (RowData, error) {

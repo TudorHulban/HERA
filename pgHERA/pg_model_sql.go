@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+/*
+File contains methods dealing with SQL ops.
+*/
+
 // Query Method returns data as slice of slice of interface{}.
 func (h Hera) Query(sql string) (RowData, error) {
 	rows, errQ := h.DBConn.Query(sql)
@@ -43,7 +47,7 @@ func (h Hera) InsertModel(modelData interface{}) error {
 	ddl = append(ddl, ") VALUES (")
 	for k, v := range modelColumnData {
 		var delim string
-		if v.RDBMSType == "string" {
+		if v.RDBMSType == "text" {
 			delim = `'`
 		}
 		ddl = append(ddl, delim+fmt.Sprintf("%v", v.Value)+delim)
@@ -53,7 +57,7 @@ func (h Hera) InsertModel(modelData interface{}) error {
 	}
 	ddl = append(ddl, ");")
 	ddlSQL := strings.Join(ddl, " ")
-	h.L.Print("SQL: ", ddlSQL)
+	h.L.Debug("SQL: ", ddlSQL)
 
 	_, errIns := h.DBConn.Exec(ddlSQL)
 	return errIns

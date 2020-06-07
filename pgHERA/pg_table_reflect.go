@@ -147,7 +147,7 @@ func (h Hera) reflectGetTableDefinition(v reflect.Value, getOnlyTableName bool) 
 		// check if definition overrides table name
 		if v.Type().Field(i).Name == "tableName" {
 			result.TableName = strings.ToLower(v.Type().Field(i).Tag.Get("hera"))
-			h.L.Debug("Overriden table name:", result.TableName)
+			h.L.Debug("Overridden table name:", result.TableName)
 		}
 
 		if getOnlyTableName {
@@ -184,6 +184,8 @@ func (h Hera) reflectGetTableDefinition(v reflect.Value, getOnlyTableName bool) 
 		// adding field type now that we defined the column data holder and parsed the tag.
 		column.RDBMSType = getRDBMSType(v.Type().Field(i).Type.String(), column.PK)
 		h.L.Debug("rdbms type: ", column.RDBMSType)
+
+		// passing now complete column definition to final result slice.
 		result.ColumnsDef = append(result.ColumnsDef, column)
 	}
 	return result, nil
