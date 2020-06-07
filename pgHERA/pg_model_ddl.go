@@ -5,16 +5,13 @@ import (
 	"strings"
 )
 
-// CreateTable Method creates table based on model. It can only parse model to return table that it would create.
+// CreateTable Method creates table based on model.
+// In simulation mode it only parses model to return table name that it would create and DDL.
 // It returns table name as table name could be overidden in struct. This way we are sure what was created.
-func (h Hera) CreateTable(model interface{}, simulateOnly bool) (string, error) {
+func (h Hera) CreateTable(model interface{}, simulateOnly bool) (string, string, error) {
 	tbDef, errDef := h.getTableDefinition(model, false)
 	if errDef != nil {
-		return "", errDef
-	}
-
-	if simulateOnly {
-		return tbDef.TableName, nil
+		return "", "", errDef
 	}
 
 	tbDDL := []string{"create table", tbDef.TableName, "("}
@@ -31,18 +28,22 @@ func (h Hera) CreateTable(model interface{}, simulateOnly bool) (string, error) 
 
 	tableDDL := strings.Join(tbDDL, " ")
 
+	if simulateOnly {
+		return tbDef.TableName, tableDDL, nil
+	}
+
 	// execute now the DDL
 	if _, errCreate := h.DBConn.Exec(tableDDL); errCreate != nil {
-		return "", errCreate
+		return "", "", errCreate
 	}
 
 	// returning table name for eventual cleaning. table was created at this point.
 	if indexDDL := getIndexDDL(tbDef); indexDDL != "" {
 		if _, errIndex := h.DBConn.Exec(indexDDL); errIndex != nil {
-			return tbDef.TableName, errIndex
+			return tbDef.TableName, "", errIndex
 		}
 	}
-	return tbDef.TableName, nil
+	return tbDef.TableName, "", nil
 }
 
 // TableExists Method returns nil if table exists.

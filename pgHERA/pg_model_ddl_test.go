@@ -17,8 +17,9 @@ func TestTableDDL(t *testing.T) {
 		defer h.CloseDBConnection()
 
 		// get table name to create first
-		tableName, errParse := h.CreateTable(interface{}(&User{}), true)
+		tableName, ddl, errParse := h.CreateTable(interface{}(&User{}), true)
 		assert.Nil(t, errParse)
+		h.L.Print("Table DDL: ", ddl)
 
 		// check if table exists already
 		if h.TableExists(tableName) == nil {
@@ -26,7 +27,7 @@ func TestTableDDL(t *testing.T) {
 		}
 
 		// table was dropped or did not exist. create it.
-		_, errCr := h.CreateTable(interface{}(&User{}), false)
+		_, _, errCr := h.CreateTable(interface{}(&User{}), false)
 		assert.Nil(t, errCr)
 
 		// now we are sure we drop it.

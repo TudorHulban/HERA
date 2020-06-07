@@ -46,6 +46,7 @@ func (h Hera) isItPointer(model interface{}) bool {
 }
 
 // need a helper to create table columns short info. helper takes a pointer type.
+// should parse tag for column name override.
 func (h Hera) produceTableColumnShortData(model interface{}) ([]ColumnShortData, error) {
 	if !h.isItPointer(model) {
 		return []ColumnShortData{}, ErrorNotAPointer
@@ -61,8 +62,22 @@ func (h Hera) produceTableColumnShortData(model interface{}) ([]ColumnShortData,
 
 		if _, exists := (*newTranslationTable())[fieldRoot.Type.String()]; exists {
 			if !strings.Contains(fmt.Sprintf("%v", fieldRoot.Tag), `"-"`) && !strings.Contains(fmt.Sprintf("%v", fieldRoot.Tag), `"pk"`) {
+				columnDef := new(Column)
+				_, errPar := h.parseFieldTags(fmt.Sprintf("%v", fieldRoot.Tag), columnDef, false)
+				if errPar != nil {
+					return []ColumnShortData{}, errPar
+				}
+
+				// check if any column name override in tag.
+				var columnName string
+				if columnDef.ColumnName != "" {
+					columnName = columnDef.ColumnName
+				} else {
+					columnName = fieldRoot.Name
+				}
+
 				result = append(result, ColumnShortData{
-					ColumnName: fieldRoot.Name,
+					ColumnName: columnName,
 					RDBMSType:  fieldRoot.Type,
 					Value:      reflect.ValueOf(model).Elem().FieldByIndex([]int{i}),
 				})
@@ -82,6 +97,7 @@ func reflectGetTableName(v reflect.Type) string {
 
 // parseFieldTags Method takes field tags and a pointer to already populated column definition.
 // It populates even more the column definition or returns an error or to ignore the field.
+// If field to skip it returns true, nil.
 func (h Hera) parseFieldTags(fieldTags string, columnDef *Column, existsPK bool) (bool, error) {
 	for _, tagS := range strings.Split(fieldTags, ",") {
 		s := strings.ToLower(strings.TrimSpace(tagS))

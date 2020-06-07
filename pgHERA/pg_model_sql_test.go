@@ -15,13 +15,13 @@ func TestInsertModel(t *testing.T) {
 		defer h.CloseDBConnection()
 
 		// get table name to check if it exists
-		tableName, errParse := h.CreateTable(interface{}(&User{}), true)
+		tableName, _, errParse := h.CreateTable(interface{}(&User{}), true)
 		assert.Nil(t, errParse)
 
 		// check if table exists
 		if h.TableExists(tableName) != nil {
 			// does not exist. create it
-			_, errCr := h.CreateTable(interface{}(&User{}), false)
+			_, _, errCr := h.CreateTable(interface{}(&User{}), false)
 			assert.Nil(t, errCr)
 		}
 

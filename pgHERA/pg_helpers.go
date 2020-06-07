@@ -57,6 +57,7 @@ func getColumnDDL(ddl Column) string {
 	return strings.Join(result, " ")
 }
 
+// getIndexDDL Helper creates multi column index DDL based on tag.
 func getIndexDDL(tbDef tableDefinition) string {
 	var indexCols []string
 
@@ -69,6 +70,5 @@ func getIndexDDL(tbDef tableDefinition) string {
 	if len(indexCols) == 0 {
 		return ""
 	}
-
 	return "create index " + tbDef.TableName + "_idx" + " ON " + tbDef.TableName + " (" + strings.Join(indexCols, ",") + ");"
 }
