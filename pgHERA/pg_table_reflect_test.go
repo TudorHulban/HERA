@@ -27,7 +27,7 @@ func TestListTableColumns(t *testing.T) {
 		c, errColumns := h.getTableDefinition(interface{}(&User{}), false)
 		assert.Nil(t, errColumns)
 		for k, v := range c.ColumnsDef {
-			h.l.Print(k, v)
+			h.L.Print(k, v)
 		}
 	}
 }
@@ -48,5 +48,5 @@ func TestProduceModelData(t *testing.T) {
 	data, errData := h.produceTableColumnShortData(&mdata)
 	assert.Nil(t, errData)
 
-	h.l.Print("data: ", data)
+	h.L.Print("data: ", data)
 }

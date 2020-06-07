@@ -34,3 +34,18 @@ func TestTableDDL(t *testing.T) {
 		assert.Nil(t, h.DropTable(tableName, true))
 	}
 }
+
+type TSimple struct {
+	age int
+}
+
+func TestTableName(t *testing.T) {
+	h, errCo := New(LocalDBInfo, 3, true)
+	if assert.Nil(t, errCo) {
+		// get table name to create first
+		tableName, ddl, errParse := h.CreateTable(interface{}(&TSimple{}), true)
+		assert.Nil(t, errParse)
+		assert.Equal(t, tableName, "tsimples")
+		assert.Equal(t, ddl, "create table tsimples ( age bigint );")
+	}
+}

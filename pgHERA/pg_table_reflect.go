@@ -10,7 +10,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/iancoleman/strcase"
 	"github.com/jinzhu/inflection"
 )
 
@@ -98,9 +97,9 @@ func (h Hera) produceTableColumnShortData(model interface{}) ([]ColumnShortData,
 // reflectGetTableName Helper in case the table name value is needed using reflection types.
 func reflectGetTableName(v reflect.Type) string {
 	if v.Kind() == reflect.Ptr {
-		return inflection.Plural(strcase.ToSnake(v.Elem().Name()))
+		return inflection.Plural(strings.ToLower(v.Elem().Name()))
 	}
-	return inflection.Plural(strcase.ToSnake(v.Name()))
+	return inflection.Plural(strings.ToLower(v.Name()))
 }
 
 // parseFieldTags Method takes "hera" field tags and a pointer to already populated column definition.
@@ -210,8 +209,5 @@ func (h Hera) getTableDefinition(model interface{}, getOnlyTableName bool) (tabl
 	if !h.isItPointer(model) {
 		return tableDefinition{}, ErrorNotAPointer
 	}
-	val := reflect.ValueOf(model).Elem()
-	h.L.Debug("val:", val)
-
-	return h.reflectGetTableDefinition(val, getOnlyTableName)
+	return h.reflectGetTableDefinition(reflect.ValueOf(model).Elem(), getOnlyTableName)
 }
