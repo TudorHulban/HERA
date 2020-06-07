@@ -8,7 +8,7 @@ import (
 )
 
 func TestInsertModel(t *testing.T) {
-	h, errCo := New(LocalDBInfo, 3, true)
+	h, errCo := New(LocalDBInfo, 1, true)
 
 	// create table if not exists
 	if assert.Nil(t, errCo) {

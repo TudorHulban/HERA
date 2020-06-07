@@ -35,7 +35,7 @@ func (h Hera) InsertModel(modelData interface{}) error {
 	}
 	ddl := []string{"insert into", tbName.TableName, "("}
 	for k, v := range modelColumnData {
-		ddl = append(ddl, v.ColumnName)
+		ddl = append(ddl, strings.ToLower(v.ColumnName))
 		if k < len(modelColumnData)-1 {
 			ddl = append(ddl, ",")
 		}
@@ -43,8 +43,8 @@ func (h Hera) InsertModel(modelData interface{}) error {
 	ddl = append(ddl, ") VALUES (")
 	for k, v := range modelColumnData {
 		var delim string
-		if v.RDBMSType.String() == "string" {
-			delim = `"`
+		if v.RDBMSType == "string" {
+			delim = `'`
 		}
 		ddl = append(ddl, delim+fmt.Sprintf("%v", v.Value)+delim)
 		if k < len(modelColumnData)-1 {

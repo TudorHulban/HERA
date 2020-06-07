@@ -17,6 +17,7 @@ func (h Hera) CreateTable(model interface{}, simulateOnly bool) (string, string,
 	tbDDL := []string{"create table", tbDef.TableName, "("}
 
 	for k, v := range tbDef.ColumnsDef {
+		h.L.Debug("v: ", v)
 		tbDDL = append(tbDDL, getColumnDDL(v))
 
 		// adding comma between fields

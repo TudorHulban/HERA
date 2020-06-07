@@ -21,9 +21,7 @@ type DBInfo struct {
 type Hera struct {
 	DBInfo
 	DBConn *sql.DB
-	// used for translating structure fields to RDBMS field types
-	transTable *translationTable
-	L          *log.LogInfo
+	L      *log.LogInfo
 }
 
 // New Constructor for database connection. Preferable only one connection per DB.
@@ -38,14 +36,13 @@ func New(db DBInfo, logLevel int, wCaller bool) (Hera, error) {
 		return Hera{}, errAlive
 	}
 	return Hera{
-		DBInfo:     db,
-		DBConn:     dbconn,
-		transTable: newTranslationTable(),
-		L:          log.New(logLevel, os.Stderr, wCaller),
+		DBInfo: db,
+		DBConn: dbconn,
+		L:      log.New(logLevel, os.Stderr, wCaller),
 	}, nil
 }
 
-// CloseConnection Method closes connection to database.
+// CloseDBConnection Method closes connection to database.
 func (h Hera) CloseDBConnection() error {
 	return h.DBConn.Close()
 }

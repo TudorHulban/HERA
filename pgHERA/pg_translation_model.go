@@ -1,18 +1,35 @@
 package pghera
 
-// translationTable Type used for providing persistence for the created translation table.
-type translationTable map[string]string
+// getRDBMSType Helper returns RDBMS type based on Go type.
+// If PK switch to auto increment field.
+func getRDBMSType(goType string, isPK bool) string {
+	if isPK {
+		switch goType {
+		case "int":
+			return "serial"
+		case "int64":
+			return "bigserial"
+		}
+		return ""
+	}
 
-func newTranslationTable() *translationTable {
-	t := make(translationTable)
-	t["string"] = "text"
-	t["*string"] = "text"
-	t["int"] = "bigint"
-	t["int64"] = "bigint"
-	t["float64"] = "numeric"
-	t["*float64"] = "numeric"
-	t["bool"] = "boolean"
-	t["*bool"] = "boolean"
-
-	return &t
+	switch goType {
+	case "string":
+		return "text"
+	case "*string":
+		return "text"
+	case "int":
+		return "bigint"
+	case "int64":
+		return "bigint"
+	case "float64":
+		return "numeric"
+	case "*float64":
+		return "numeric"
+	case "bool":
+		return "boolean"
+	case "*bool":
+		return "boolean"
+	}
+	return ""
 }

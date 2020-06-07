@@ -17,7 +17,7 @@ import (
 // ColumnShortData concentrates model field data.
 type ColumnShortData struct {
 	ColumnName string
-	RDBMSType  reflect.Type
+	RDBMSType  string
 	Value      reflect.Value
 }
 
@@ -60,8 +60,9 @@ func (h Hera) produceTableColumnShortData(model interface{}) ([]ColumnShortData,
 
 		h.L.Debug("field type: ", fieldRoot.Type.String(), " - ", fieldRoot.Tag)
 
-		if _, exists := (*newTranslationTable())[fieldRoot.Type.String()]; exists {
+		if getRDBMSType(fieldRoot.Type.String(), false) != "" {
 			if !strings.Contains(fmt.Sprintf("%v", fieldRoot.Tag), `"-"`) && !strings.Contains(fmt.Sprintf("%v", fieldRoot.Tag), `"pk"`) {
+				// data for column
 				columnDef := new(Column)
 				_, errPar := h.parseFieldTags(fmt.Sprintf("%v", fieldRoot.Tag), columnDef, false)
 				if errPar != nil {
@@ -78,8 +79,9 @@ func (h Hera) produceTableColumnShortData(model interface{}) ([]ColumnShortData,
 
 				result = append(result, ColumnShortData{
 					ColumnName: columnName,
-					RDBMSType:  fieldRoot.Type,
-					Value:      reflect.ValueOf(model).Elem().FieldByIndex([]int{i}),
+					// to be taken from translation table
+					RDBMSType: getRDBMSType(fieldRoot.Type.String(), columnDef.PK),
+					Value:     reflect.ValueOf(model).Elem().FieldByIndex([]int{i}),
 				})
 			}
 		}
@@ -153,17 +155,14 @@ func (h Hera) reflectGetTableDefinition(v reflect.Value, getOnlyTableName bool) 
 		}
 
 		// check if field definition exists in translation table. if not skip field.
-		rdbmsFieldType, exists := (*h.transTable)[v.Type().Field(i).Type.String()]
-		if !exists {
-			h.L.Warnf("skipping field number: %v type: %s", i, rdbmsFieldType)
+		if getRDBMSType(v.Type().Field(i).Type.String(), false) == "" {
+			h.L.Warnf("skipping field number: %v type: %s", i, v.Type().Field(i).Type.String())
 			continue
 		}
 
 		column := Column{
-			ColumnName: strcase.ToSnake(v.Type().Field(i).Name),
+			ColumnName: strings.ToLower(v.Type().Field(i).Name),
 		}
-		// adding field type now that we defined the column data holder.
-		column.RDBMSType = rdbmsFieldType
 
 		tag := v.Type().Field(i).Tag.Get("hera")
 		h.L.Debug("Tag:", tag)
@@ -181,6 +180,10 @@ func (h Hera) reflectGetTableDefinition(v reflect.Value, getOnlyTableName bool) 
 		if ignoreField {
 			continue
 		}
+
+		// adding field type now that we defined the column data holder and parsed the tag.
+		column.RDBMSType = getRDBMSType(v.Type().Field(i).Type.String(), column.PK)
+		h.L.Debug("rdbms type: ", column.RDBMSType)
 		result.ColumnsDef = append(result.ColumnsDef, column)
 	}
 	return result, nil
