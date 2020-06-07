@@ -1,4 +1,5 @@
-# HERA - Layer for RDBMS
+# Deprecated
+## HERA - Layer for RDBMS
 (SQLite) Schema - needs SQLite support (database file created at first execution, ex. db.Exec(DDL)):
 ```bash
 sudo apt-get install sqlite3 libsqlite3-dev
@@ -50,6 +51,8 @@ insert into roles(code, description, enabled) values("ADMIN", "Full rights", "Y"
 insert into roles(code, description, enabled) values("USER", "Some rights", "Y");
 insert into roles(code, description, enabled) values("GUEST", "Few rights", "Y");
 ```
+## Resources
 ```html
+http://go-database-sql.org/index.html
 https://www.acloudtree.com/how-to-shove-data-into-postgres-using-goroutinesgophers-and-golang/
 ```
