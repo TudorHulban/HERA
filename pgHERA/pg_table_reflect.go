@@ -69,7 +69,7 @@ func (h Hera) produceTableColumnShortData(model interface{}) ([]ColumnShortData,
 					return []ColumnShortData{}, errPar
 				}
 
-				// check if any column name override in tag.
+				// check if any column name overridden in tag.
 				var columnName string
 				if columnDef.ColumnName != "" {
 					columnName = columnDef.ColumnName
