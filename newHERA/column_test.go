@@ -1,4 +1,4 @@
-package main
+package hera
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 )
 
 func TestNewColumns(t *testing.T) {
-	columns, _, errParse := NewColumns(
+	columns, _, errParse := newColumns(
 		&Person{},
 	)
 	require.NoError(t, errParse)

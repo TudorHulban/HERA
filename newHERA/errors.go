@@ -1,7 +1,7 @@
-package main
+package hera
 
 import "errors"
 
 var (
-	ErrIsOverrideTableName = errors.New("override of table name")
+	errIsOverrideTableName = errors.New("override of table name")
 )

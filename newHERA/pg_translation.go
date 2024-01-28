@@ -1,4 +1,4 @@
-package main
+package hera
 
 func reflectToPG(reflectType string, isPK bool) string {
 	if isPK {

@@ -1,13 +1,13 @@
-package main
+package hera
 
 import (
 	"fmt"
 	"strings"
 )
 
-type Columns []*Column
+type columns []*column
 
-func (cols Columns) String() string {
+func (cols columns) String() string {
 	result := []string{
 		fmt.Sprintf(
 			"Columns: %d",

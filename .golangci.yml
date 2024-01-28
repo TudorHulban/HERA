@@ -29,11 +29,11 @@
   
   linters-settings:
     lll:
-      line-length: 150
+      line-length: 100
     maligned:
       suggest-new: true
     gocyclo:
       min-complexity: 13
     funlen:
-      lines: 77
+      lines: 55
       statements: 50

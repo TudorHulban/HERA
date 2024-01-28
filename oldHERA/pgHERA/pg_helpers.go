@@ -4,10 +4,6 @@ import (
 	"database/sql"
 )
 
-/*
-File contains helpers that were not glued to model.
-*/
-
 // rowsToSlice - https://kylewbanks.com/blog/query-result-to-map-in-golang
 // transformation independent of table name.
 func rowsToSlice(rows *sql.Rows) (RowData, error) {
@@ -31,7 +27,9 @@ func rowsToSlice(rows *sql.Rows) (RowData, error) {
 		if errScan != nil {
 			return RowData{}, errScan
 		}
+
 		var rowValues RowValues
+
 		rowValues.Values = columnPointers
 		data.Data = append(data.Data, rowValues)
 	}

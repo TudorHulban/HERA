@@ -1,4 +1,4 @@
-package main
+package hera
 
 const (
 	_TagName      = "hera"

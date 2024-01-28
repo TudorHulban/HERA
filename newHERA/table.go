@@ -1,14 +1,14 @@
-package main
+package hera
 
 import "strings"
 
 type Table struct {
 	Name    string
-	Columns Columns
+	Columns columns
 }
 
 func NewTable(object any) (*Table, error) {
-	columns, overrideTableName, errGetColumns := NewColumns(object)
+	columns, overrideTableName, errGetColumns := newColumns(object)
 	if errGetColumns != nil {
 		return nil,
 			errGetColumns

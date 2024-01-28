@@ -1,4 +1,4 @@
-package main
+package hera
 
 import (
 	"errors"
@@ -7,11 +7,10 @@ import (
 	"strings"
 )
 
-type Column struct {
-	Name   string
-	PGType string
-
-	ValueDefault string
+type column struct {
+	Name         string
+	PGType       string
+	DefaultValue string
 
 	IsPK       bool
 	IsNullable bool
@@ -19,8 +18,8 @@ type Column struct {
 	IsIndexed  bool
 }
 
-func NewColumns(object any) (Columns, string, error) {
-	result := make([]*Column, 0)
+func newColumns(object any) (columns, string, error) {
+	result := make([]*column, 0)
 
 	var alreadyHavePK bool
 
@@ -31,14 +30,14 @@ func NewColumns(object any) (Columns, string, error) {
 			Elem().
 			FieldByIndex([]int{i})
 
-		column := Column{
+		column := column{
 			Name: fieldRoot.Name,
 		}
 
 		if valueTag, hasTag := fieldRoot.Tag.Lookup(_TagName); hasTag {
 			errUpdate := column.UpdateWith(valueTag, alreadyHavePK)
 			if errUpdate != nil {
-				if errUpdate.Error() == ErrIsOverrideTableName.Error() {
+				if errUpdate.Error() == errIsOverrideTableName.Error() {
 					tableName = strings.ToLower(fieldRoot.Name)
 
 					continue
@@ -67,7 +66,7 @@ func NewColumns(object any) (Columns, string, error) {
 		nil
 }
 
-func (col *Column) UpdateWith(tagValues string, alreadyHavePK bool) error {
+func (col *column) UpdateWith(tagValues string, alreadyHavePK bool) error {
 	for _, tagValue := range strings.Split(
 		tagValues, ",",
 	) {
@@ -96,7 +95,7 @@ func (col *Column) UpdateWith(tagValues string, alreadyHavePK bool) error {
 		}
 
 		if tagClean == _TagOverrideTableName {
-			return ErrIsOverrideTableName
+			return errIsOverrideTableName
 		}
 
 		if tagClean == _TagPK {
@@ -116,7 +115,11 @@ func (col *Column) UpdateWith(tagValues string, alreadyHavePK bool) error {
 		}
 
 		if tagClean == _TagRequired {
-			col.IsIndexed = true
+			col.IsNullable = false
+		}
+
+		if tagClean == _TagDefault {
+			col.DefaultValue = compoundTagValue
 		}
 
 		if tagClean == _TagOverrideColumnName {
@@ -127,7 +130,7 @@ func (col *Column) UpdateWith(tagValues string, alreadyHavePK bool) error {
 	return nil
 }
 
-func (col *Column) AsDDLPostgres() string {
+func (col *column) AsDDLPostgres() string {
 	result := []string{
 		strings.ToLower(col.Name),
 	}
@@ -150,9 +153,9 @@ func (col *Column) AsDDLPostgres() string {
 		result = append(result, "NOT NULL")
 	}
 
-	if len(col.ValueDefault) > 0 {
+	if len(col.DefaultValue) > 0 {
 		result = append(result, "DEFAULT")
-		result = append(result, col.ValueDefault)
+		result = append(result, col.DefaultValue)
 	}
 
 	return strings.Join(result, " ")
