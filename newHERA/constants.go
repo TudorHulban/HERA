@@ -1,14 +1,16 @@
 package main
 
 const (
-	_TagName = "hera"
+	_TagName      = "hera"
+	_TagSeparator = ":"
 
 	_TagPK                 = "pk"
 	_TagUnique             = "unique"
 	_TagIndexed            = "index"
 	_TagRequired           = "required"
 	_TagDefault            = "default"
-	_TagOverrideColumnName = "name"
+	_TagOverrideColumnName = "columnname"
+	_TagOverrideTableName  = "tablename"
 )
 
 const _TagPointer = "*"

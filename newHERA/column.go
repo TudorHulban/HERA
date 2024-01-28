@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -18,10 +19,12 @@ type Column struct {
 	IsIndexed  bool
 }
 
-func NewColumns(object any) (Columns, error) {
+func NewColumns(object any) (Columns, string, error) {
 	result := make([]*Column, 0)
 
 	var alreadyHavePK bool
+
+	var tableName string
 
 	for i := 0; i < reflect.TypeOf(object).Elem().NumField(); i++ {
 		fieldRoot := reflect.TypeOf(object).
@@ -32,8 +35,25 @@ func NewColumns(object any) (Columns, error) {
 			Name: fieldRoot.Name,
 		}
 
+		if valueTag, hasTag := fieldRoot.Tag.Lookup(_TagName); hasTag {
+			errUpdate := column.UpdateWith(valueTag, alreadyHavePK)
+			if errUpdate != nil {
+				if errUpdate.Error() == ErrIsOverrideTableName.Error() {
+					tableName = strings.ToLower(fieldRoot.Name)
+
+					continue
+				}
+
+				return nil, "",
+					errUpdate
+			}
+		}
+
+		if !fieldRoot.IsExported() {
+			continue
+		}
+
 		column.PGType = reflectToPG(fieldRoot.Type.String(), column.IsPK)
-		column.UpdateWith(fieldRoot.Tag.Get(_TagName), alreadyHavePK)
 
 		if column.IsPK {
 			alreadyHavePK = true
@@ -43,17 +63,40 @@ func NewColumns(object any) (Columns, error) {
 	}
 
 	return result,
+		tableName,
 		nil
 }
 
-func (col *Column) UpdateWith(tag string, alreadyHavePK bool) error {
-	for _, tag := range strings.Split(
-		tag, ",",
+func (col *Column) UpdateWith(tagValues string, alreadyHavePK bool) error {
+	for _, tagValue := range strings.Split(
+		tagValues, ",",
 	) {
-		tagClean := strings.ToLower(strings.TrimSpace(tag))
+		tagClean := strings.ToLower(
+			strings.TrimSpace(tagValue),
+		)
+
+		var compoundTagValue string
+
+		if strings.Contains(tagClean, _TagSeparator) {
+			tagCompound := strings.Split(tagClean, _TagSeparator)
+
+			if len(tagCompound) != 2 {
+				return fmt.Errorf(
+					"malformed tag value: %s",
+					tagClean,
+				)
+			}
+
+			tagClean = tagCompound[0]
+			compoundTagValue = tagCompound[1]
+		}
 
 		if len(tagClean) == 0 || tagClean == "-" {
 			return nil
+		}
+
+		if tagClean == _TagOverrideTableName {
+			return ErrIsOverrideTableName
 		}
 
 		if tagClean == _TagPK {
@@ -74,6 +117,10 @@ func (col *Column) UpdateWith(tag string, alreadyHavePK bool) error {
 
 		if tagClean == _TagRequired {
 			col.IsIndexed = true
+		}
+
+		if tagClean == _TagOverrideColumnName {
+			col.Name = compoundTagValue
 		}
 	}
 

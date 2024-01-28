@@ -8,7 +8,7 @@ import (
 )
 
 func TestNewColumns(t *testing.T) {
-	columns, errParse := NewColumns(
+	columns, _, errParse := NewColumns(
 		&Person{},
 	)
 	require.NoError(t, errParse)

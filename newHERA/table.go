@@ -8,13 +8,19 @@ type Table struct {
 }
 
 func NewTable(object any) (*Table, error) {
-	columns, errGetColumns := NewColumns(object)
+	columns, overrideTableName, errGetColumns := NewColumns(object)
 	if errGetColumns != nil {
 		return nil,
 			errGetColumns
 	}
 
-	tableName := strings.ToLower(getObjectName(object))
+	var tableName string
+
+	if len(overrideTableName) > 0 {
+		tableName = overrideTableName
+	} else {
+		tableName = strings.ToLower(getObjectName(object))
+	}
 
 	if strings.HasPrefix(tableName, _TagPointer) {
 		tableName = tableName[1:]
