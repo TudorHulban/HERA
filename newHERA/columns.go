@@ -18,10 +18,13 @@ func (cols Columns) String() string {
 	for ix, column := range cols {
 		result = append(result,
 			fmt.Sprintf(
-				"%d. Name: %s, Type: %s",
+				"%d. Name: %s, Type: %s, IsPK: %t, IsNullable: %t, IsIndexed: %t",
 				ix+1,
 				column.Name,
 				column.PGType,
+				column.IsPK,
+				column.IsNullable,
+				column.IsIndexed,
 			),
 		)
 	}

@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestTable(t *testing.T) {
+func TestNewColumns(t *testing.T) {
 	columns, errParse := NewColumns(
 		&Person{},
 	)

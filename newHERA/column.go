@@ -46,18 +46,14 @@ func NewColumns(object any) (Columns, error) {
 		nil
 }
 
-func (col *Column) UpdateWith(tags string, alreadyHavePK bool) error {
+func (col *Column) UpdateWith(tag string, alreadyHavePK bool) error {
 	for _, tag := range strings.Split(
-		tags, ",",
+		tag, ",",
 	) {
 		tagClean := strings.ToLower(strings.TrimSpace(tag))
 
-		if len(tagClean) == 0 {
-			continue
-		}
-
-		if tagClean == "-" {
-			continue
+		if len(tagClean) == 0 || tagClean == "-" {
+			return nil
 		}
 
 		if tagClean == _TagPK {
@@ -82,4 +78,35 @@ func (col *Column) UpdateWith(tags string, alreadyHavePK bool) error {
 	}
 
 	return nil
+}
+
+func (col *Column) AsDDLPostgres() string {
+	result := []string{
+		strings.ToLower(col.Name),
+	}
+
+	result = append(result,
+		col.PGType,
+	)
+
+	if col.IsPK {
+		result = append(result,
+			"PRIMARY KEY",
+		)
+	}
+
+	if col.IsUnique {
+		result = append(result, "UNIQUE")
+	}
+
+	if col.IsNullable {
+		result = append(result, "NOT NULL")
+	}
+
+	if len(col.ValueDefault) > 0 {
+		result = append(result, "DEFAULT")
+		result = append(result, col.ValueDefault)
+	}
+
+	return strings.Join(result, " ")
 }

@@ -10,3 +10,5 @@ const (
 	_TagDefault            = "default"
 	_TagOverrideColumnName = "name"
 )
+
+const _TagPointer = "*"

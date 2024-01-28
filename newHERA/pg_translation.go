@@ -3,7 +3,7 @@ package main
 func reflectToPG(reflectType string, isPK bool) string {
 	if isPK {
 		switch reflectType {
-		case "int", "int64":
+		case "int", "int64", "uint":
 			return "bigserial"
 
 		default:
@@ -15,7 +15,13 @@ func reflectToPG(reflectType string, isPK bool) string {
 	case "string", "*string":
 		return "text"
 
-	case "int", "int64":
+	case "int8", "int16":
+		return "smallint"
+
+	case "int32":
+		return "integer"
+
+	case "int", "int64", "uint":
 		return "bigint"
 
 	case "float64", "*float64":
