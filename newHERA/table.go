@@ -1,6 +1,8 @@
 package hera
 
-import "strings"
+import (
+	"strings"
+)
 
 type Table struct {
 	Name    string
@@ -41,13 +43,25 @@ func (t *Table) AsDDLPostgres() string {
 	}
 
 	for ix, column := range t.Columns {
+		ddl := column.AsDDLPostgres()
+
+		if len(ddl) == 0 {
+			if ix == len(t.Columns)-1 {
+				if High[string](result) == _FieldSeparator {
+					result = Pop[string](result)
+				}
+			}
+
+			continue
+		}
+
 		result = append(result,
-			column.AsDDLPostgres(),
+			ddl,
 		)
 
 		if ix < len(t.Columns)-1 {
 			result = append(result,
-				",",
+				_FieldSeparator,
 			)
 		}
 	}

@@ -12,10 +12,11 @@ type column struct {
 	PGType       string
 	DefaultValue string
 
-	IsPK       bool
-	IsNullable bool
-	IsUnique   bool
-	IsIndexed  bool
+	IsPK          bool
+	IsNullable    bool
+	IsUnique      bool
+	IsIndexed     bool
+	IsToBeSkipped bool
 }
 
 func newColumns(object any) (columns, string, error) {
@@ -90,7 +91,13 @@ func (col *column) UpdateWith(tagValues string, alreadyHavePK bool) error {
 			compoundTagValue = tagCompound[1]
 		}
 
-		if len(tagClean) == 0 || tagClean == "-" {
+		if len(tagClean) == 0 {
+			return nil
+		}
+
+		if tagClean == "-" {
+			col.IsToBeSkipped = true
+
 			return nil
 		}
 
@@ -131,6 +138,10 @@ func (col *column) UpdateWith(tagValues string, alreadyHavePK bool) error {
 }
 
 func (col *column) AsDDLPostgres() string {
+	if col.IsToBeSkipped {
+		return ""
+	}
+
 	result := []string{
 		strings.ToLower(col.Name),
 	}

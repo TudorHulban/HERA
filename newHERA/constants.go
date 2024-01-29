@@ -14,3 +14,5 @@ const (
 )
 
 const _TagPointer = "*"
+
+const _FieldSeparator = ","
